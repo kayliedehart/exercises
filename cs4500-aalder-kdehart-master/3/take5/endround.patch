@@ -1,0 +1,155 @@
+From 1bda8ddaca127bfea564bf4c0dd7f8164e2dd67e Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 22:21:59 -0500
+Subject: [PATCH 1/2] fixed printing for endofround, players in nicer format
+
+---
+ 2/take5/main.py | 39 +++++++++++++++++++--------------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
+
+diff --git a/2/take5/main.py b/2/take5/main.py
+index 089bb2b..36d3176 100644
+--- a/2/take5/main.py
++++ b/2/take5/main.py
+@@ -4,32 +4,31 @@ import components
+ import dealer
+ import player
+ 
++MAXPLAYERS = 4
++MINPLAYERS = 2
++LOSINGSCORE = 66
++
+ class Main:
+ 	players = []
+ 	dealer = None
+ 
+-	def __init__(players):
+-		players_list = []
+-		for i in range(players):
+-			players_list.append(player.Player(i))
+-		self.players = players_list
+-		runGame()
++	def __init__(self, players):
++		if int(players) < MINPLAYERS or int(players) > MAXPLAYERS:
++			raise Exception("Illegal Number of Players, please type a number between {} and {}".format(MINPLAYERS, MAXPLAYERS))
++		for i in range(int(players)):
++			(self.players.append({'player' : player.Player(i),
++								 'name' : i,
++								 'bull_points':  0}))
+ 
+ 	def endOfRound(self):
+-		points_list = []
+-		for player in self.players:
+-			points_list.append((player.name, player.getBullPoints()))
+-
+-		def getKey(item):
+-			return item[1]
+-
+-		players = sorted(points_list, key=getKey())
+-
+-		if players[0][1] >= 66:
+-			announcement = {}
+-			# do some string interpolation, print it
+-		else:
+-			self.runGame()
++		players = sorted(self.players, key=lambda player: player['bull_points'])
++
++		if players[-1]['bull_points'] >= LOSINGSCORE:
++			print "Final Scores: \n "
++			for player in players:
++				print "Player {} had {} points \n".format(player['player'].getName(), player['bull_points'])
++ 		else:
++ 			self.runGame()
+ 			
+ 
+ 	def startRound(self):
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 263fb264caa92a7575fea2dd1ad04c7bd78b673f Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 22:32:18 -0500
+Subject: [PATCH 2/2] endgame, turn, rungame fixes
+
+---
+ 2/take5/main.py | 45 ++++++++++++++++++++++++---------------------
+ 1 file changed, 24 insertions(+), 21 deletions(-)
+
+diff --git a/2/take5/main.py b/2/take5/main.py
+index 36d3176..c25323b 100644
+--- a/2/take5/main.py
++++ b/2/take5/main.py
+@@ -27,45 +27,48 @@ class Main:
+ 			print "Final Scores: \n "
+ 			for player in players:
+ 				print "Player {} had {} points \n".format(player['player'].getName(), player['bull_points'])
+- 		else:
+- 			self.runGame()
+-			
++		else:
++			self.runGame()
++
+ 
+ 	def startRound(self):
+-		dealer = dealer.Dealer(players_list)
+-		self.dealer = dealer
++		self.dealer = dealer.Dealer(self.players)
+ 
+-		for player in players_list:
+-			player.setHand(dealer.dealFirst())
++		for player in self.players:
++			player['player'].setHand(self.dealer.dealFirst())
+ 
+-		dealer.setStacks()
++		self.dealer.setStacks()
+ 
+-		for player in players_list:
+-			player.setCurrentStacks(dealer.getStacks())
++	def totalBull(self, stack):
++		points = 0
++		if stack:
++			for card in stack.getCards():
++				points += card.getBullNumber()
++		return points
+ 
+ 	def turn(self):
+ 		cards_played = []
+ 		for player in self.players:
+-			cards_played.append((player.getName(), player.playCard()))
+-
+-		def getKey(item):
+-			return item[1]
++			cards_played.append((player['player'], player['player'].playCard(self.dealer.getStacks())))
+ 
+-		cards_played = sorted(cards_played, key=getKey)
++		cards_played = sorted(cards_played, key=lambda card: card[1])
+ 
+ 		for players_card in cards_played:
++			current_player = players_card[0]
+ 			stacks = self.dealer.updateStacks(players_card)
+-			choice = self.players[players_card[0]].pickStack(stacks)
+-			self.dealer.removeStack(choice, players_card)
++			choice = current_player.pickStack(stacks)
++			if choice is not []:
++				self.players[current_player.getName()]['bull_points'] += self.totalBull(choice)
++				self.dealer.removeStack(choice, players_card)
+ 
+ 	def runGame(self):
+ 
+-		startRound()
++		self.startRound()
+ 
+-		while len(players_list[0].getHand()) > 0:
+-			turn()
++		while len(self.players[0]['player'].getHand()) > 0: 
++			self.turn()
+ 
+-		endOfRound()
++		self.endOfRound()
+ 
+ def main():
+ 	Main()
+-- 
+2.5.4 (Apple Git-61)
+

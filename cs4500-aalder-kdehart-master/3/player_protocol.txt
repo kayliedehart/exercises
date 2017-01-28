@@ -1,0 +1,146 @@
+Communication Protocol Diagram:
+
+                                                                                                                       THE PLAYER
+  NOTES:                                                                                                                   |                                            PLAYER 2
+      When 2-4 Players register,                                                  OUR SERVERS        register              |                                               |
+      start game                                                                       | <———————————————————————————————— |  register(“yourName”, portNumber):            |
+                                                                                       |                                   |      |                                        |
+      portNumber is an int that is                                                     |                                   |      +->  +———————————————————————————+       |
+      a valid port number on the                                                       |                                   |           |  { request: “register”    |       |
+      server for the player to connect                                                 |                                   |           |    name: yourName }       |       |
+      to the server                                                                    |                                   |           +———————————————————————————+       |
+                                                                                       |             register              |                                               |
+                                                                                       | <-------------------------------------------------------------------------------- |
+                                                                                       |                                   |                                               |
+                                                                                       |                                   |                                               |
+                                                                                       |                                   |                                               |
+                                          startRound()                                 |                                   |                                               |
+      gameId is unique per player           |                                          | --------------------------------> |                                               |
+      and randomly assigned                 +->  +--------------------------------+    |            start-round            |                                               |
+                                                 | { gameId: int                  |    | --------------------------------------------------------------------------------> |
+      A hand must contain a list of              |   response: "start_round"      |    |            start-round            |                                               |
+      10 Card                                    |   hand:                        |    |                                   |                                               |
+                                                 |        {[ Card,                |    |                                   |                                               |
+      Tuple values represent a Card,             |           Card,                |    |                                   |                                               |
+      and must be valid face value               |           Card,                |    |                                   |                                               |
+      and bull point values with                 |           ... ]}               |    |           setHand() [ack]         |                                               |
+      face value first, bull point               |   name: String }               |    | <================================ | setHand(hand):                                |
+      value second                               +--------------------------------+    |                                   |   |                                           |
+                                                                                       |                                   |   +->  +—————---—————————————+                |
+                                                                                       |                                   |        | { ack: True }       |                |
+                                                                                       |                                   |        +---------------------+                |
+                                                                                       |           setHand() [ack]         |                                               |
+                                                                                       | <================================================================================ |
+                                                                                       |                                   |                                               |
+                                                                                       |                                   |                                               |
+                                                                                       |                                   |                                               |
+                                          for player in players:                       |               turn                |                                               |
+                                            turn():                                    | ————————————————————————————————> | playCard(deck):                               |
+                                              |                                        |                                   |  |                                            |
+      A Stack is a list of Card of            +-> +-------------------------------+    |                                   |  +-> +---------------------+                  |
+      length between 1 and 5 cards                | { gameId: int                 |    |                                   |      | { chosenCard: Card  |                  |
+                                                  |   response: "turn"            |    |             playCard              |      |   gameId: int }     |                  |
+                                                  |   deck: [ Stack,              |    | <———————————————————————————————— |      +---------------------+                  |
+                                                  |           Stack,              |    |                                   |                                               |
+                                                  |           Stack,              |    |                                   |                                               |
+                                                  |           Stack ] }           |    |                                   |                                               |
+                                                  +-------------------------------+    |                                   |                                               |
+                                                                                       |                                   |                                               |
+      Main collects a list of Card        updateStacks(card):                          |            updateStacks           |                                               |
+      played from each player's             |                                          | ————————————————————————————————> | pickStack(deck):                              |
+      playCard() method. For each card      +-> +---------------------------------+    |                                   |  |                                            |
+      (in value order), if the card would       | { gameId: int                   |    |                                   |  +-> +----------------------+                 |
+      require the player to choose a            |   response: "pickStack"         |    |            pickStack              |      | { choice: Stack      |                 |
+      Stack, then updateStacks() would          |   deck: [ Stack                 |    | <———————————————————————————————— |      |   gameId: int }      |                 |
+      return a message, else for that           |           Stack,                |    |                                   |      +----------------------+                 |
+      player, no JSON for updateStacks()        |           Stack,                |    |                                   |                                               |
+      would return to the player, and           |           Stack ] }             |    |                                   |                                               |
+      the game would move on to the             +---------------------------------+    |                                   |                                               |
+      next players card in the list.                                                   |                                   |                                               |
+                                                                                       |             turn                  |                                               |
+                                                                                       | --------------------------------------------------------------------------------> |
+                                                                                       |           playCard                |                                               |
+                                                                                       | <-------------------------------------------------------------------------------- |
+                                                                                       |          updateStacks             |                                               |
+                                                                                       | --------------------------------------------------------------------------------> |
+                                                                                       |           pickStack               |                                               |
+                                                                                       | <-------------------------------------------------------------------------------- |
+                                                                                       |                                   |                                               |
+                                                                                       |                                   |                                               |
+                                                                                       |             endOfRound            |                                               |
+      If the game isn't over after the    endOfRound():                                | ————————————————————————————————> |                                               |
+      round, endOfRound will not send       |                                          |             endOfRound            |                                               |
+      a message, but instead startRound()   +-> +---------------------------------+    | --------------------------------------------------------------------------------> |
+      will be called by the server              | {score:[(name, points)          |    |           disconnect [ack]        |                                               |
+      and the protocol will continue            |         (name, points)          |    | <================================ | disconnect():                                 |
+      from startRound                           |         (name, points)          |    |                                   |  |                                            |
+                                                |          ... ]                  |    |                                   |  +-> +----------------------------+           |
+                                                |         response: "disconnect" }|    |                                   |      | { closeConnection: True }  |           |
+      the tuple of name, points is              +---------------------------------+    |                                   |      +----------------------------+           |
+      representative of each players                                                   |                                   |                                               |
+      last point values                                                                |                                                                                   |
+                                                                                       |           disconnect [ack]                                                        |
+      If no ack received from player                                                   | <================================================================================ |
+      after startRound() or endOfRound(),                                              |                                                                                   |
+      repeat last message (retry),                                                     |                                                                                   |
+      then timeout & close connection                                                  |
+                                                                                       |
+                                                                                       |
+                                                                                       |
+
+
+Data Definitions:
+  Card: a tuple of two ints, the first of which represents a valid face value between 1-104 (inclusive) and the second represents a valid bull point value between 2-7 (inclusive)
+
+  Stack: a list of Card with a length between 1 and 5
+
+  portNumber: an int that is a valid port number on the server for the player to use to connect to the server
+
+  hand: a list of exactly 10 Cards
+
+  deck: a list of exactly 4 Stack
+
+Signatures for Player Object:
+
+      register: String, portNumber -> JSON( { request: "Register", name: String } )
+          FUNCTION: registers the player's implementation with the game server
+          EXAMPLE:
+            register("John") -> { request: "Register",
+                                  name: "John" }
+
+      setHand: hand -> JSON( { ack: True } )
+          FUNCTION: responds to server that player has received information about the hand it was delt and the game state. Stores the information about the players hand.
+          EXAMPLE:
+            setHand( [ (10, 2), (40, 4), (29, 3), (92, 5), (3, 3), (77, 3), (22, 5), (35, 2), (103, 6), (43, 5) ] ) -> { ack: True }
+
+      playCard: deck -> JSON( { chosenCard: Card, gameId: int } )
+          FUNCTION: chooses a card to play for the turn based on the game state passed in, and tells the server the chosen card. Removes that card from the players hand
+          EXAMPLE:
+            playCard( [ [(49, 2)], [(28, 3), (93, 3)], [(39, 2), (99, 5)], [(34, 5), (49, 6), (102, 3)], [(11, 2)] ]) -> { chosenCard: (96, 4),
+                                                                                                                           gameId: 392 }
+
+      pickStack: deck -> JSON( { choice: Stack, gameId: int } )
+          FUNCTION: chooses a stack for the player to collect and tells the server what stack that is
+          EXAMPLE:
+            pickStack( [ [(49, 2)], [(28, 3), (93, 3)], [(39, 2), (99, 5)], [(34, 5), (49, 6), (102, 3)], [(11, 2)] ]) -> { chosenStack: [(49, 2)]
+                                                                                                                             gameId: 392 }
+
+      disconnect:  -> Json( { closeConnection: True } )
+          FUNCTION: Confirms the end of game disconnect method from the server
+          EXAMPLE
+            disconnect() -> { closeConnection: True }
+
+Description of Process:
+
+  methods are called based on incoming JSON field "response".
+
+  response: "start_round" -> setHand(...)
+            "turn" -> playCard(...)
+            "pickStack" -> pickStack(...)
+            "disconnect" -> disconnect()
+
+  the response flag also will signify what other data is available in that JSON packet.
+
+  the startRound and endOfRound messages are sent to all players at the same time.
+
+  the turn message is not sent to a player until it is their turn to play and all previous players have completed their turn

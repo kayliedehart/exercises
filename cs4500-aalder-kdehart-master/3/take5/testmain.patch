@@ -1,0 +1,39 @@
+From c41890c74774bcafe7e52fa55682c84171b9901d Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 22:48:40 -0500
+Subject: [PATCH] removed unit tests for main
+
+---
+ 2/take5/test_main.py | 19 -------------------
+ 1 file changed, 19 deletions(-)
+ delete mode 100644 2/take5/test_main.py
+
+diff --git a/2/take5/test_main.py b/2/take5/test_main.py
+deleted file mode 100644
+index a587992..0000000
+--- a/2/take5/test_main.py
++++ /dev/null
+@@ -1,19 +0,0 @@
+-# Unit-testing for main component methods. Due to lack of player component there are no tests.
+-
+-import unittest
+-import dealer
+-import components
+-#import player
+-import main
+-
+-class TestMainMethods(unittest.TestCase):
+-
+-  def setUp(self):
+-    self.game = main(4)
+-
+-  def tearDown(self):
+-    del self.game
+-
+-
+-if __name__ == '__main__':
+-    unittest.main()
+\ No newline at end of file
+-- 
+2.5.4 (Apple Git-61)
+

@@ -1,0 +1,261 @@
+commit 9ad87dab0581d5b660daaa67098a7df9ccdb5939
+Author: aalder <aalder@ccs.neu.edu>
+Date:   Sun Jan 24 23:55:24 2016 -0500
+
+    fixed typo & included statement about integrations
+
+commit 291e00332841214972d619c6c8ed2c7352be664b
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:51:11 2016 -0500
+
+    removed comments
+
+commit 6f071664196b9a813a0d1d653e36bd41bdd33981
+Merge: 4f529c8 360085a
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:49:43 2016 -0500
+
+    Merge branch 'master' of https://github.ccs.neu.edu/cs4500sp16/cs4500-aalder-kdehart
+
+commit 4f529c856fbf78de45cf12b929c2c5e1484662d8
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:49:33 2016 -0500
+
+    more runnable
+
+commit 360085ac589bba0f1013d77acb0a1ad14911ac5a
+Author: aalder <aalder@ccs.neu.edu>
+Date:   Sun Jan 24 23:46:33 2016 -0500
+
+    Updated readme to say how to run the main.py file
+
+commit 17fc2725c795cf9eef9acea1c18cf5fa79477f92
+Author: aalder <aalder@ccs.neu.edu>
+Date:   Sun Jan 24 23:45:24 2016 -0500
+
+    expanded on tests in readme.txt
+
+commit c4ed4fabfe2a642d42770306011409cefc290a56
+Merge: 00c5078 b6080c8
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:43:11 2016 -0500
+
+    Merge branch 'master' of https://github.ccs.neu.edu/cs4500sp16/cs4500-aalder-kdehart
+
+commit 00c507870680e2b58697d3818a2628571569542a
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:42:58 2016 -0500
+
+    dealer.removeCard
+
+commit b6080c8c4ab9da959f66d6f32aadcd2c8543e873
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 23:41:49 2016 -0500
+
+    removed .pyc files not detected by gitignore
+
+commit e42f41a740fa88ae2357714fd996c5355e401b71
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 23:39:06 2016 -0500
+
+    added subject lines to test files and cleaned up player imports
+
+commit 9cab03a15ffa77c70dc97982b52955fa62c42265
+Merge: a27d057 08c71f6
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:35:36 2016 -0500
+
+    main.turn complete
+
+commit 08c71f62bb9993cd69e2c5d9d9cf49e07e56b713
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 23:33:58 2016 -0500
+
+    fixed dealer bugs found using tests
+
+commit a27d057bddd806077ba84b1b119d6f715c91d487
+Merge: b384ea4 d3d99e6
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:33:10 2016 -0500
+
+    Merge branch 'master' of https://github.ccs.neu.edu/cs4500sp16/cs4500-aalder-kdehart
+
+commit b384ea442a878d79b85658956fd721b33c3c736f
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:30:20 2016 -0500
+
+    finished dealer.updateStacks
+
+commit d3d99e61e46090296783f78d65ee8ecff7e5843b
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 23:28:13 2016 -0500
+
+    added readme
+
+commit d6c1c8e3b975b311b77c45e52e19afcdc4639247
+Merge: bf94752 fe31fd3
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:16:07 2016 -0500
+
+    Merge branch 'master' of https://github.ccs.neu.edu/cs4500sp16/cs4500-aalder-kdehart
+
+commit bf94752755601f3097f9f0c9fcf13e53a5138f14
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 23:15:46 2016 -0500
+
+    more wrk on turn, dealer.updaeStacks conditionals
+
+commit fe31fd30468256dc506985148a7bd3b81e6bebcf
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 22:49:56 2016 -0500
+
+    fixed the components file based on tests
+
+commit e63211e51ce86013d7c330cb9347bd755bef8784
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 22:31:59 2016 -0500
+
+    improved test cases for components. currently there is a bug with set cards
+
+commit 9bcdae45d526d42b045b125c351c5b146085cf39
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 21:43:44 2016 -0500
+
+    abstract bull points initialization
+
+commit dbc8632b96e9fd2614019e39b984807c6f96612c
+Merge: 9e536c0 2d703ce
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 21:36:38 2016 -0500
+
+    merge conflicts
+
+commit 9e536c085e7c0610ac0abd2dda3995b438dda980
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 21:34:58 2016 -0500
+
+    merging; work on Main.turn()
+
+commit 2d703cede89f6df5ebcc35ca96eafd3e50b9014f
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 21:32:24 2016 -0500
+
+    fixed basic python syntax and indentation so the code will compile and run
+
+commit 16f518143342375287b145b4400e9a0669db131d
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 21:02:15 2016 -0500
+
+    major changes and organization to main (abstraction, startRound defined), dealer setup, init methods
+
+commit b342f08f3238a7d8186a19c97a22e07a7badbf7b
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sun Jan 24 18:56:12 2016 -0500
+
+    added dealer.py methods
+
+commit a238a1599ed1a4dfc7e432165b18e1c7609c0571
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Sun Jan 24 18:52:49 2016 -0500
+
+    added back in stack object as it was specified in interface
+
+commit 090d906284e0000e819bb458d2af32cab1974ead
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Thu Jan 21 16:58:15 2016 -0500
+
+    wrote getters and setters for dealer and card. added test file for card.py
+
+commit 54e1497f0f099a172f9e3d291b74ff9fa31d1bcd
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Thu Jan 21 16:08:40 2016 -0500
+
+    broke out components, basic unit test files
+
+commit b4be918531b35ecb35a8926a99277145798c5db2
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Wed Jan 20 21:54:53 2016 -0500
+
+    unittested and debugged player.py, all tests passing, cleanup
+
+commit 66702310b3c3b11702a0f242e2f85f3249fd62b9
+Merge: f908879 0508c3a
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Wed Jan 20 21:48:06 2016 -0500
+
+    Merge branch 'master' of https://github.ccs.neu.edu/cs4500sp16/cs4500-aalder-kdehart
+
+commit 0508c3afce13f308431f527c4d31df70b37fc743
+Author: aalder <aalder@ccs.neu.edu>
+Date:   Wed Jan 20 21:42:27 2016 -0500
+
+    Updated .gitignore to include .pyc files
+
+commit f90887988efd94f30e4d269df8320b3478eaca66
+Merge: 491e26a 19dd0fe
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Wed Jan 20 21:41:42 2016 -0500
+
+    Merge branch 'master' of https://github.ccs.neu.edu/cs4500sp16/cs4500-aalder-kdehart
+
+commit 491e26a7009a35a1c2e890828400ffb2b31cf7e2
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Wed Jan 20 21:40:00 2016 -0500
+
+    unittested and debugged player.py, all tests passing, removed comments, setUp/tearDown, cleanup
+
+commit 19dd0fe79080b7ec9e4ddc397a635202674e52ea
+Author: aalder <aalder@ccs.neu.edu>
+Date:   Wed Jan 20 21:37:26 2016 -0500
+
+    Deleted player.pyc
+    
+    accidentally uploaded compiled file. Deleting
+
+commit 585a294d54ea4de04c38e50324b8f33fe63845f6
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Tue Jan 19 20:36:07 2016 -0500
+
+    wrote test cases. end day one. still need to debug
+
+commit a15579a6137bce0a7880b23faf45bc4343fbbe10
+Author: aalder <alder.a@husky.neu.edu>
+Date:   Tue Jan 19 18:30:21 2016 -0500
+
+    Wrote player implementation according to interface
+
+commit b14efda534abf6ee6b3e6c3b27f22bcb0e6c3e25
+Author: Vishesh Yadav <vishesh3y@gmail.com>
+Date:   Tue Jan 19 13:04:50 2016 -0500
+
+    push for-2.txt for assignment 2
+
+commit 5c825c7bd46803febb9d5ae310d31d01e9fe2fd3
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sat Jan 16 15:43:05 2016 -0500
+
+    updated README.txt
+
+commit e11c41e4cff8243024d38b8a7e34091dafec38af
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sat Jan 16 15:22:42 2016 -0500
+
+    move README.md to correct folder
+
+commit 1eaa885627c2eb4c902f0f25e4665c746fa8acb2
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sat Jan 16 15:20:41 2016 -0500
+
+    adding in Memo
+
+commit cc96c8da06c0baed934484004fbdf1d204ccb5c5
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sat Jan 16 15:15:57 2016 -0500
+
+    added gitignore and player-interface.txt
+
+commit ed60aeaa74548a58f4f75577fc6f8de574c7e9ed
+Author: kdehart <kdehart@ccs.neu.edu>
+Date:   Sat Jan 16 15:14:02 2016 -0500
+
+    first commit

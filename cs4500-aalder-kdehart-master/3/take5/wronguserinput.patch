@@ -1,0 +1,58 @@
+From 54cab9b149b1f80fb421391d0ecaaefc8d3920fa Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 22:14:28 -0500
+Subject: [PATCH] check for wrong number of players from command line
+
+---
+ 2/take5/main.py | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/2/take5/main.py b/2/take5/main.py
+index 089bb2b..a3f9ab2 100644
+--- a/2/take5/main.py
++++ b/2/take5/main.py
+@@ -1,19 +1,24 @@
+ # Implements the protocols between the Player and the rest of the game components of 6 Nimmt!
+ 
++import sys
+ import components
+ import dealer
+ import player
+ 
++MAXPLAYERS = 4
++MINPLAYERS = 2
++
+ class Main:
+ 	players = []
+ 	dealer = None
+ 
+-	def __init__(players):
++	def __init__(self, players):
+ 		players_list = []
+-		for i in range(players):
++		if int(players) < MINPLAYERS or int(players) > MAXPLAYERS:
++			raise Exception("Illegal Number of Players, please type a number between {} and {}".format(MINPLAYERS, MAXPLAYERS))
++		for i in range(int(players)):
+ 			players_list.append(player.Player(i))
+ 		self.players = players_list
+-		runGame()
+ 
+ 	def endOfRound(self):
+ 		points_list = []
+@@ -68,9 +73,10 @@ class Main:
+ 
+ 		endOfRound()
+ 
+-def main():
+-	Main()
++def main(num_players):
++	game = Main(num_players)
++	game.runGame()
+ 
+ if __name__ == "__main__":
+-    main()
++    main(sys.argv[1])
+ 
+-- 
+2.5.4 (Apple Git-61)
+

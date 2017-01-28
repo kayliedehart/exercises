@@ -1,0 +1,149 @@
+                           Dealer                             Player
+
+                                +                                +
+                                |                                |
+                                |  takeCards(list of TraitCard)  |
+                                +------------------------------> |
+                                |                                |
+                                |                                |
+                                |                                +------------------------------------------+
+                                |                                |                                          |
+                                |                                |                                          |
+                                |                                |                                          |
+                                |                                |                                          |
+                                |      wateringHoleDiscard()     |                                          |
+                                +------------------------------> |                                          |
+                         +------+                                |                                          |
+                         |      |       exchange()               |                                          |
+                         |      +------------------------------> |                                          |
+        repeat 3 times---+      |                                |     +--------------------------------+   |
+                         |      | <------------------------------+ <---+Either:                         |   |
+                         |      |                                |     |exchangeSpeciesBoard(TraitCard) |   |
+                         +------+                                |     |or                              |   |
+                                |                                |     |exchangeBodySize(TraitCard,     |   |
+                                |                                |     |   SpeciesBoard)                |   +----+
+                                |       flipCard()               |     |or                              |   |  repeat each round
+                                +------------------------------> |     |exchangeAnimal(TraitCard,       |   |
+                                |                                |     |   SpeciesBoard)                |   |
+                                |                                |     +--------------------------------+   |
+                                |                                |                                          |
+                                |                                |                                          |
+                                |   feedPlayer(WateringHole,     |                                          |
+                                |     list of SpeciesBoards)     | +----+                                   |
+                                +------------------------------> |      |                                   |
+                                |                                |      |                                   |
+                                |                                |      +---+ repeated until player         |
++----------------------------+  |                                |      |     runs out of                   |
+|Either:                     +> +------------------------------> |      |     species to feed               |
+|pickSpeciesBoard(list of    |  |                                | +----+                                   |
+|  SpeciesBoard)             |  |                                |                                          |
+|or                          |  |                                |                                          |
+|giveFoodToken()             |  |                                |                                          |
+|                            |  |                                +------------------------------------------+
++----------------------------+  |                                |
+                                |         score(String)          |
+                                +------------------------------> |
+                                |                                |
+                                |                                |
+                                +                                +
+
+
+Data Definitions:
+A Trait is an enumeration of one of the following:
+    carnivore, ambush, burrowing, climbing, cooperation, fat_tissue, fertile, foraging, hard_shell, herding, horns, long_neck,
+    pack_hunting, scavenger, symbiosis, warning_call
+
+A TraitCard is a tuple (Trait, int) where the int represents a foodToken value
+
+A FoodBag is an object with a field foodTokens that is an int
+
+A WateringHole is an object with fields foodTokens and cards. foodTokens is an int representing how many food
+tokens are on the board, and cards is a list of TraitCard representing the trait cards on the watering hole in the game.
+The value of foodTokens should be equal to the sum of the foodToken values of all the trait cards currently on the watering hole. 
+Ex: WateringHole:
+        foodTokens = 4
+        cards = [(herding, 2), (carnivore, 2)]
+
+A Deck is a list of TraitCard of maximum length 122 with at most 17 TraitCard with carnivore Traits and at most
+7 TraitCard of each of the other types of Traits
+Ex: [(hard_shell, 3), (carnivore, 2), (hard_shell, 1), (carnivore, 2)]
+
+A SpeciesBoard is a object with a field popSize, body, and traits. popSize and body are int's in the range 0-7 inclusive.
+traits is a list of TraitCard of length 0-3 inclusive.
+Ex: SpeciesBoard:
+        popSize = 2
+        body = 1
+        traits = [(hard_shell, 3), (carnivore, 2)]
+
+
+For ease of reading, treat WateringHole and SpeciesBoard in the contracts of the methods below as if they were the objects
+with field values listed in the order described above. 
+(ie: read a WateringHole depicted (3, (carnivore, 3)) as a WateringHole with WateringHole.foodTokens == 3 and WateringHole.cards == (carnivore, 3))
+
+Player Methods:
+takeCards: List of TraitCard of length at least 3 -> None
+    Gives the player cards at the beginning of each round.
+    Example: takeCards(carnivore, 2) -> None
+
+wateringHoleDiscard: None -> TraitCard
+    Method returns the trait card the player wants to discard to the watering hole at the beginning of the turn
+    Example: wateringHoleDiscard() -> (carnivore, 2)
+
+exchange: None -> TraitCard
+    Method calls either exchangeSpeciesBoard, exchangeBodySize, or exchangeAnimal in Dealer & returns
+    the card it is trading in during that exchange
+    Example: exchange() -> (carnivore, 2)
+
+flipCard: None -> List of SpeciesBoard
+    player hands dealer their list of species boards after they finish the exchange process.
+    Example: flipCard() -> ((3, 2, ()), (2, 7, ((hard_shell, 3), (carnivore, 5))))
+
+feedPlayer: WateringHole, list of SpeciesBoard -> SpeciesBoard
+    Player selects what species board they want to feed that round based on what is in the watering hole and what
+    the other species boards on the field are.
+    Example: feedPlayer((3, (carnivore, 3)), ((3, 2, ()), (2, 7, ((hard_shell, 3), (carnivore, 5)))) -> (2, 1, ())
+
+pickSpeciesBoard: List of SpeciesBoard -> SpeciesBoard
+    If the player has played a carnivore, they must chose which (valid) species board they can eat.
+    Example: pickSpeciesBoard((3, (carnivore, 3)), ((3, 2, ()), (2, 7, ((hard_shell, 3), (carnivore, 5)))) -> (2, 1, ())
+
+giveFoodToken: int -> None
+    Gives the player a certain amount of food tokens when they feed their non-Carnivore species board
+    Example: giveFoodToken(2) -> None
+
+score: String -> None
+    Gives the player a printable string showing the scores when the game ends
+    Example: score("You won!") -> None
+
+
+Dealer Methods:
+
+exchangeSpeciesBoard: TraitCard -> SpeciesBoard
+    Gives the player a new species board in exchange for one of their unplayed TraitCards
+    Example: exchangeSpeciesBoard((carnivore, 2)) -> (1, 0, ())
+
+exchangeBodySize: TraitCard, SpeciesBoard -> SpeciesBoard
+    Increases the body size of the given SpeciesBoard in exchange for taking one of the player's new TraitCard
+    Example: exchangeBodySize((carnivore, 2), (1, 0, ())) -> (1, 1, ())
+
+exchangeAnimal: TraitCard, SpeciesBoard -> SpeciesBoard
+    Increases the population size of the given SpeciesBoard in exchange for taking one of the player's new TraitCard
+    Example: exchangeAnimal((carnivore, 2), (1, 0, ())) -> (2, 0, ())
+
+
+To create an instance of the player:
+Use an init method that takes an int to be the players assigned name, as well as a empty food bag.
+
+
+To create an instance of the dealer:
+Use an init method that takes the number of players as an int. The dealer then initializes that many players.
+
+
+Sequencing Constraints:
+All calls between player and dealer must happen in the order specified in the diagram above.
+
+
+Security Constraints:
+Player is handed single objects and can keep track of these themselves; however, the Dealer holds the game state and checks the
+legality of all player moves. The dealer always hands the player a new object that is a separate object from the one recorded in 
+the dealer's game state, meaning that the player cannot mutate the dealer's information and the dealer will know if they cheat.

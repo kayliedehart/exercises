@@ -1,0 +1,25 @@
+From c023d48357f55db5af0d1f6d99d45c724de5e6e5 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 23:47:36 -0500
+Subject: [PATCH] smallest card played first
+
+---
+ 2/player.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/2/player.py b/2/player.py
+index 8e082b4..f78e6d4 100644
+--- a/2/player.py
++++ b/2/player.py
+@@ -12,7 +12,7 @@ class Player:
+   def discard_card(self, game_state):
+     chosen = self.cards[0]
+     for card in self.cards:
+-      if(chosen.face_value<card.face_value):
++      if(chosen.face_value>card.face_value):
+         chosen=card
+ 
+     self.cards.remove(chosen)
+-- 
+2.5.4 (Apple Git-61)
+

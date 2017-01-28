@@ -1,0 +1,22 @@
+#!/usr/bin/env python2.7
+# A test harness for the Dealer's and Player's display methods
+
+import sys
+import os
+import json
+from gui.dealer import *
+
+try:
+	testInput = json.load(sys.stdin)
+	if len(testInput) == 3:
+		curDealer = Dealer.dealerFromJson(testInput)
+		pid = os.fork()
+		if pid == 0:
+			curDealer.players[0].display()
+		else:
+			curDealer.display()
+		exit(0)
+
+
+except Exception as e:
+	quit()

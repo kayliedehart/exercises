@@ -1,0 +1,3 @@
+  #!/bin/sh
+  . localpython/bin/activate
+  exec python xattack.py

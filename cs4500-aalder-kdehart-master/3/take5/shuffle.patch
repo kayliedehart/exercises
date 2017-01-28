@@ -1,0 +1,47 @@
+From 6c2e70d7d5d83f1bc1cbc07cb261f171d016afce Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 22:04:25 -0500
+Subject: [PATCH] shuffle cards, sorting cleaner
+
+---
+ 2/take5/dealer.py | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index 427ceb2..cc3599f 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -10,7 +10,7 @@ class Dealer:
+ 		self.players = players_list
+ 		for i in range(1, 105):
+ 			self.deck.append(components.Card(i))
+-		self.shuffleCards()
++		random.shuffle(self.deck)
+ 
+ 	def getPlayers(self):
+ 		return self.players
+@@ -36,9 +36,6 @@ class Dealer:
+ 			stacks.append(components.Stack(self.deck.pop(1)))
+ 		self.stacks = stacks
+ 
+-	def shuffleCards(self):
+-		pass
+-
+ 	def dealFirst(self):
+ 		hand = [self.deck.pop()]
+ 		for i in range(0, 9):
+@@ -49,10 +46,7 @@ class Dealer:
+ 		card = players_card[1]
+ 		stacks_to_pass = []
+ 
+-		def getKey(stack):
+-			return stack.getCards()[-1].number
+-
+-		stacks = sorted(self.stacks, key=getKey(), reverse=True)
++		stacks = sorted(self.stacks, key=lambda stack: stack.getCards()[-1], reverse=True)
+ 		for stack in stacks:
+ 			if card.number > stack.getCards()[-1].number:
+ 				if len(stack) < 5:
+-- 
+2.5.4 (Apple Git-61)
+

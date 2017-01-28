@@ -1,0 +1,26 @@
+From 72b224b6bd2532bb25db837395bf93c06d32efe6 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 22:39:23 -0500
+Subject: [PATCH] fix comment
+
+---
+ 2/take5/test_dealer.py | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/2/take5/test_dealer.py b/2/take5/test_dealer.py
+index 4a22104..dbe9d0c 100644
+--- a/2/take5/test_dealer.py
++++ b/2/take5/test_dealer.py
+@@ -1,8 +1,7 @@
+-# Unit-testing suite for 6 Nimmt! methods in dealer component (no player component)
++# Unit-testing suite for 6 Nimmt! methods in dealer component
+ import unittest
+ import dealer
+ import components
+-#import player
+ 
+ class TestDealerMethods(unittest.TestCase):
+ 	def setUp(self):
+-- 
+2.5.4 (Apple Git-61)
+

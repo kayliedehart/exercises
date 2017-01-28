@@ -1,0 +1,57 @@
+From 6c383ee2c24aaf007575f9908df66dc8135274fb Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 21:37:08 -0500
+Subject: [PATCH] initialize bull points correctly
+
+---
+ 2/take5/components.py      | 8 ++++----
+ 2/take5/test_components.py | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/2/take5/components.py b/2/take5/components.py
+index ea42cdf..948d2a7 100644
+--- a/2/take5/components.py
++++ b/2/take5/components.py
+@@ -1,5 +1,4 @@
+ # The basic card and stack components for the main components to pass around
+-import random
+ from random import randint
+ 
+ class Card:
+@@ -8,7 +7,7 @@ class Card:
+ 
+ 	def __init__(self, number):
+ 		self.number = number
+-		self.bull = self.setBullNumber(False)
++		self.setBullNumber(None)
+ 
+ 	def getNumber(self):
+ 		return self.number
+@@ -17,8 +16,9 @@ class Card:
+ 		return self.bull
+ 
+ 	def setBullNumber(self, number):
+-		if not number:
+-			self.bull = random.randint(2,8)
++		if (type(number) is not int) or (number < 2) or (number > 7):
++			random_bull = randint(2,8)
++			self.bull = random_bull
+ 		else:
+ 			self.bull = number
+ 
+diff --git a/2/take5/test_components.py b/2/take5/test_components.py
+index 4b97284..f8da769 100644
+--- a/2/take5/test_components.py
++++ b/2/take5/test_components.py
+@@ -20,7 +20,7 @@ class TestComponentsMethods(unittest.TestCase):
+ 
+   def testGetBullNumber(self):
+     bullNum = self.card1.getBullNumber()
+-    if((bullNum <= 7) or (bullNum >= 2)) :
++    if((bullNum <= 7) or (bullNum >= 2)) and type(bullNum) is int :
+       self.assertEqual(True, True)
+     else :
+       self.assertEqual(True, False)
+-- 
+2.5.4 (Apple Git-61)
+

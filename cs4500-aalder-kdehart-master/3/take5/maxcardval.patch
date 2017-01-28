@@ -1,0 +1,25 @@
+From 10a6d6e75823a40611279a2035cc80877f6dbd21 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 23:42:43 -0500
+Subject: [PATCH] changed max card value
+
+---
+ 2/take5/dealer.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index cb3f810..29176cc 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -4,7 +4,7 @@ import components
+ HANDSIZE = 10
+ TOTALSTACKS = 4
+ MAXSTACK = 5
+-MAXFACEVALUE = 104
++MAXFACEVALUE = 210
+ 
+ class Dealer:
+ 	players = [] 
+-- 
+2.5.4 (Apple Git-61)
+

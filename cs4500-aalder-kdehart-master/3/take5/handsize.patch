@@ -1,0 +1,25 @@
+From 676c295d980fcbad3aa0e77cf3e4caa24063ffaa Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 23:44:04 -0500
+Subject: [PATCH] changed hand size
+
+---
+ 2/take5/dealer.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index cb3f810..c12f51c 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -1,7 +1,7 @@
+ # The Dealer of a 6 Nimmt! game, handles dealing Cards to Players and setting up the Stacks
+ import components
+ 
+-HANDSIZE = 10
++HANDSIZE = 9
+ TOTALSTACKS = 4
+ MAXSTACK = 5
+ MAXFACEVALUE = 104
+-- 
+2.5.4 (Apple Git-61)
+

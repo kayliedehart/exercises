@@ -1,0 +1,35 @@
+We found many ambiguities in the specifications: 
+
+
+1) in the player class:
+
+	self.selected : it is not clear what they are referring to,
+	so we assume it refers to the index of the card that will be
+	 discarded from the player's hand
+
+	card_position: is it the discarded card? 
+
+	what does  # for now, "players" is an integer means --> number of players? 
+
+
+2) the way of passing arguments is different as shown below.
+	We are resolving it by using the __init__ function
+	to pass arguments to the fields of the class
+
+  a) no arguments are passed in: 
+  	 e.g: 
+		in the card class : 
+ 		 class Card:
+			self.number =  # integer in range [1,104]. UNIQUE.
+			self.bull =  # integer in range [2,7]
+
+   b) the values for fields are not passed in correctly: 
+      e.g: 
+     	class Stack(cards=None):
+
+We also encountered under specification in the player class: 
+  1) They do not have name as a field in the player class,
+  to resolve this we add name as a field in the player class
+  2) they do not have bull_points accumulated in the player class,
+   to resolve this we add bull_points as a field in the player class
+

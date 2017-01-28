@@ -1,0 +1,2549 @@
+From 3f4f80ab1b969f3da31d3c86f89a1ecf1490d1f8 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Tue, 26 Jan 2016 12:59:22 -0500
+Subject: [PATCH 01/14] added player.py, some basic syntax fixes for dealer and
+ main
+
+---
+ 3/components.py      | 36 ++++++++++++++++++++++++++
+ 3/dealer.py          | 72 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3/main.py            | 73 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3/player.py          | 41 +++++++++++++++++++++++++++++
+ 3/test_card.py       | 19 ++++++++++++++
+ 3/test_components.py | 41 +++++++++++++++++++++++++++++
+ 3/test_dealer.py     | 35 +++++++++++++++++++++++++
+ 3/test_main.py       | 19 ++++++++++++++
+ 8 files changed, 336 insertions(+)
+ create mode 100644 3/components.py
+ create mode 100644 3/dealer.py
+ create mode 100644 3/main.py
+ create mode 100644 3/player.py
+ create mode 100644 3/test_card.py
+ create mode 100644 3/test_components.py
+ create mode 100644 3/test_dealer.py
+ create mode 100644 3/test_main.py
+
+diff --git a/3/components.py b/3/components.py
+new file mode 100644
+index 0000000..ea42cdf
+--- /dev/null
++++ b/3/components.py
+@@ -0,0 +1,36 @@
++# The basic card and stack components for the main components to pass around
++import random
++from random import randint
++
++class Card:
++	number = 0
++	bull = 0
++
++	def __init__(self, number):
++		self.number = number
++		self.bull = self.setBullNumber(False)
++
++	def getNumber(self):
++		return self.number
++
++	def getBullNumber(self):
++		return self.bull
++
++	def setBullNumber(self, number):
++		if not number:
++			self.bull = random.randint(2,8)
++		else:
++			self.bull = number
++
++
++class Stack:
++	cards = []
++
++	def __init__(self, card):
++		self.cards.append(card)
++
++	def getCards(self):
++		return self.cards
++
++	def setCard(self, card):
++		self.cards.append(card)
+\ No newline at end of file
+diff --git a/3/dealer.py b/3/dealer.py
+new file mode 100644
+index 0000000..d93a4eb
+--- /dev/null
++++ b/3/dealer.py
+@@ -0,0 +1,72 @@
++# The Dealer of a 6 Nimmt! game, handles dealing Cards to Players and setting up the Stacks
++import components
++
++class Dealer:
++	players = [] 
++	deck = [] 
++	stacks = []
++
++	def __init__(self, players_list):
++		self.players = players_list
++		for i in range(1, 105):
++			self.deck.append(components.Card(i))
++		self.shuffleCards()
++
++	def getPlayers(self):
++		return self.players
++
++	def setPlayers(self, group):
++		self.players = group
++
++	def addPlayer(self, player):
++		self.players.append(player)
++
++	def getDeck(self):
++		return self.deck
++
++	def setDeck(self, cards):
++		self.deck = cards
++
++	def getStacks(self):
++		return self.stacks
++
++	def setStacks(self):
++		stacks = []
++		for i in range(1,5):
++			stacks.append(components.Stack(self.deck.pop(1)))
++		self.stacks = stacks
++
++	def shuffleCards(self):
++		pass
++
++	def dealFirst(self):
++		hand = [self.deck.pop()]
++		for i in range(0, 9):
++			hand.append(self.deck.pop())
++		return hand
++
++	def getKey(stack):
++				return stack.getCards()[-1].number
++
++	def updateStacks(self, players_card):
++		card = players_card[1]
++		stacks_to_pass = []
++
++		stacks = sorted(self.stacks, key=self.getKey(), reverse=True)
++		for stack in stacks:
++			if card.number > stack.getCards()[-1].number:
++				if len(stack) < 5:
++					stack.setCard(card)
++				else:
++					stacks_to_pass.append(stack)
++					self.removeStack(stack, card)
++					break
++			else:
++				if stack.index() == 3:
++					stacks_to_pass = stacks
++
++		return stacks_to_pass
++
++	def removeStack(self, stack, players_card):
++		[[players_card] if x==stack else x for x in self.stacks]
++
+diff --git a/3/main.py b/3/main.py
+new file mode 100644
+index 0000000..2d85453
+--- /dev/null
++++ b/3/main.py
+@@ -0,0 +1,73 @@
++# Implements the protocols between the Player and the rest of the game components of 6 Nimmt!
++
++import components
++import dealer
++import foo_player
++
++class Main:
++	players = []
++	dealer = None
++
++	def __init__(players):
++		players_list = []
++		for i in range(players):
++			players_list.append(player.Player(i))
++		self.players = players_list
++		runGame()
++
++	def getKey(item):
++		return item[1]
++
++	def endOfRound(self):
++		points_list = []
++		for player in self.players:
++			points_list.append((player.getName(), player.getBullPoints()))
++
++		players = sorted(points_list, key=self.getKey())
++
++		if players[0][1] >= 66:
++			for player in players:
++				print player[0] + " " + player[1]
++		else:
++			self.runGame()
++			
++
++	def startRound(self):
++		dealer = dealer.Dealer(players_list)
++		self.dealer = dealer
++
++		for player in players_list:
++			player.setHand(dealer.dealFirst())
++
++		dealer.setStacks()
++
++		for player in players_list:
++			player.setCurrentStacks(dealer.getStacks())
++
++	def turn(self):
++		cards_played = []
++		for player in self.players:
++			cards_played.append((player.getName(), player.playCard()))
++
++		cards_played = sorted(cards_played, key=self.getKey())
++
++		for players_card in cards_played:
++			stacks = self.dealer.updateStacks(players_card)
++			choice = self.players[players_card[0]].pickStack(stacks)
++			self.dealer.removeStack(choice, players_card)
++
++	def runGame(self):
++
++		startRound()
++
++		while len(players_list[0].getHand()) > 0:
++			turn()
++
++		endOfRound()
++
++def main():
++	Main()
++
++if __name__ == "__main__":
++    main()
++
+diff --git a/3/player.py b/3/player.py
+new file mode 100644
+index 0000000..138435b
+--- /dev/null
++++ b/3/player.py
+@@ -0,0 +1,41 @@
++# the Player component for a game of 6 Nimmt!
++import components
++
++class Player:
++	name = None
++	hand = []
++	bull_points = 0
++
++	def __init__(self, name):
++		self.name = name
++
++	def getBullPoints(self):
++		return self.bull_points
++
++	def getName(self):
++		return self.name
++
++	def getHand(self):
++		return self.hand
++
++	def playCard(self):
++		chosen_card = None
++		highest_face = 0
++		for card in self.hand:
++			if card.getNumber() > highest_face:
++				chosen_card = card
++
++		return chosen_card
++
++	def totalBull(self, stack):
++		points = 0
++		for card in stack:
++			points += card.getBullPoints()
++		return points
++
++	def pickStack(self, stacks):
++		selected_stack = None
++		for stack in stacks:
++			if self.totalBull(stack) < self.totalBull(selected_stack):
++				selected_stack = stack
++		return selected_stack
+diff --git a/3/test_card.py b/3/test_card.py
+new file mode 100644
+index 0000000..b71bd43
+--- /dev/null
++++ b/3/test_card.py
+@@ -0,0 +1,19 @@
++import unittest
++import dealer
++import components
++
++class TestCardMethods(unittest.TestCase):
++  def setUp(self):
++    self.card = card.Card()
++
++  def tearDown(self):
++    del self.card
++
++  def test_get_number(self):
++    self.assertEqual()
++
++  def test_set_number(self):
++
++  def test_get_bull_points(self):
++
++  def test_set_bull_points(self):
+diff --git a/3/test_components.py b/3/test_components.py
+new file mode 100644
+index 0000000..4b97284
+--- /dev/null
++++ b/3/test_components.py
+@@ -0,0 +1,41 @@
++#tests for card and stack class methods
++import unittest
++import components
++
++class TestComponentsMethods(unittest.TestCase):
++  def setUp(self):
++    self.card1 = components.Card(1)
++    self.card2 = components.Card(2)
++    self.stack1 = components.Stack(self.card1)
++
++
++  def tearDown(self):
++    del self.card1
++    del self.card2
++    del self.stack1
++
++  def testGetNumber(self):
++    answer = self.card1.getNumber()
++    self.assertEqual(answer, 1)
++
++  def testGetBullNumber(self):
++    bullNum = self.card1.getBullNumber()
++    if((bullNum <= 7) or (bullNum >= 2)) :
++      self.assertEqual(True, True)
++    else :
++      self.assertEqual(True, False)
++
++  def testSetBullNumber(self):
++    self.card1.setBullNumber(3)
++    self.assertEqual(self.card1.getBullNumber(), 3)
++
++  def testGetCards(self):
++    self.assertEqual(self.stack1.getCards()[0].getNumber(), self.card1.getNumber())
++
++  def testSetCards(self):
++    self.stack1.setCard(self.card2)
++    self.assertEqual(self.stack1.getCards()[1].getNumber(), self.card2.getNumber())
++
++
++if __name__ == '__main__':
++  unittest.main()
+\ No newline at end of file
+diff --git a/3/test_dealer.py b/3/test_dealer.py
+new file mode 100644
+index 0000000..4a22104
+--- /dev/null
++++ b/3/test_dealer.py
+@@ -0,0 +1,35 @@
++# Unit-testing suite for 6 Nimmt! methods in dealer component (no player component)
++import unittest
++import dealer
++import components
++#import player
++
++class TestDealerMethods(unittest.TestCase):
++	def setUp(self):
++		self.dealerEmpty1 = dealer.Dealer([])
++		self.dealerEmpty2 = dealer.Dealer([])
++
++	def tearDown(self):
++		del self.dealerEmpty1
++		del self.dealerEmpty2
++
++	def testGetPlayersEmpty(self):
++		self.assertEqual(self.dealerEmpty1.getPlayers(), [])
++
++	def testGetDeck(self):
++		self.assertEqual(self.dealerEmpty1.getDeck(), self.dealerEmpty2.getDeck())
++
++	def testSetStacks(self):
++		self.dealerEmpty1.setStacks()
++		self.assertEqual(len(self.dealerEmpty1.getStacks()), 4)
++
++	def testGetStacksEmpty(self):
++		self.assertEqual(len(self.dealerEmpty1.getStacks()), 0)
++
++	def testDealFirst(self):
++		self.dealerEmpty1.setStacks()
++		self.assertEqual(len(self.dealerEmpty1.dealFirst()), 10)
++
++
++if __name__ == '__main__':
++		unittest.main()
+\ No newline at end of file
+diff --git a/3/test_main.py b/3/test_main.py
+new file mode 100644
+index 0000000..a587992
+--- /dev/null
++++ b/3/test_main.py
+@@ -0,0 +1,19 @@
++# Unit-testing for main component methods. Due to lack of player component there are no tests.
++
++import unittest
++import dealer
++import components
++#import player
++import main
++
++class TestMainMethods(unittest.TestCase):
++
++  def setUp(self):
++    self.game = main(4)
++
++  def tearDown(self):
++    del self.game
++
++
++if __name__ == '__main__':
++    unittest.main()
+\ No newline at end of file
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 7178cfff8626b4c5bfbcffc29bf55183584775f8 Mon Sep 17 00:00:00 2001
+From: aalder <alder.a@husky.neu.edu>
+Date: Tue, 26 Jan 2016 13:06:50 -0500
+Subject: [PATCH 02/14] added base test file for player.py
+
+---
+ 3/test_player.py | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+ create mode 100644 3/test_player.py
+
+diff --git a/3/test_player.py b/3/test_player.py
+new file mode 100644
+index 0000000..f1e9c2d
+--- /dev/null
++++ b/3/test_player.py
+@@ -0,0 +1,47 @@
++#unit tests for player component of 6 Nimmt!
++
++import unittest
++import components
++import player
++
++class TestPlayerMethods(unittest.TestCase):
++
++  def setUp(self):
++    self.card1 = components.Card(1)
++    self.card2 = components.Card(2)
++    self.stack1 = components.Stack(self.card1)
++    self.player0 = player.Player(0)
++
++  def tearDown(self):
++    del self.card1
++    del self.card2
++    del self.stack1
++    del self.player0
++
++
++  #getBullPoints
++  def testGetBullPoints(self):
++    self.assertEqual(self.player0.getBullPoints(), 0)
++
++  #getName
++  def testGetName(self):
++    self.assertEqual(self.player0.getName(), 0)
++
++  #getHand
++  def testGetHand(self):
++
++
++  #playCard
++  def testPlayCard(self):
++
++
++  #totalBull
++  def testTotalBull(self):
++
++  #pickStack
++  def testPickStack(self):
++
++
++if __name__ == '__main__':
++    unittest.main()
++
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 464d57c9d6619ba38274c8e28c769a1ec34b1582 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Tue, 26 Jan 2016 13:16:24 -0500
+Subject: [PATCH 03/14] forgot to rename player import, added setter for hand
+
+---
+ 3/main.py   | 2 +-
+ 3/player.py | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/3/main.py b/3/main.py
+index 2d85453..d8ce6d9 100644
+--- a/3/main.py
++++ b/3/main.py
+@@ -2,7 +2,7 @@
+ 
+ import components
+ import dealer
+-import foo_player
++import player
+ 
+ class Main:
+ 	players = []
+diff --git a/3/player.py b/3/player.py
+index 138435b..883bb36 100644
+--- a/3/player.py
++++ b/3/player.py
+@@ -18,6 +18,9 @@ class Player:
+ 	def getHand(self):
+ 		return self.hand
+ 
++	def setHand(self, hand):
++		self.hand = hand
++
+ 	def playCard(self):
+ 		chosen_card = None
+ 		highest_face = 0
+-- 
+2.5.4 (Apple Git-61)
+
+
+From d6d481435815c7e4c7025f5eda85570fcaf802e4 Mon Sep 17 00:00:00 2001
+From: aalder <alder.a@husky.neu.edu>
+Date: Tue, 26 Jan 2016 14:35:43 -0500
+Subject: [PATCH 04/14] wrote tests and started debugging player.py
+
+---
+ 2/take5/components.py      |   5 ++++-
+ 2/take5/dealer.py          |   4 ++--
+ 2/take5/main.py            |   4 ++--
+ 2/take5/test_components.py |   2 ++
+ 2/test_player.py           |   2 +-
+ 3/components.py            |  17 +++++++++++++----
+ 3/main.py                  |   4 ++--
+ 3/player.py                |   5 +++--
+ 3/player.pyc               | Bin 0 -> 2231 bytes
+ 3/test_components.py       |   2 ++
+ 3/test_dealer.py           |   2 +-
+ 3/test_main.py             |   2 +-
+ 3/test_player.py           |  17 +++++++++++++----
+ 13 files changed, 46 insertions(+), 20 deletions(-)
+ create mode 100644 3/player.pyc
+
+diff --git a/2/take5/components.py b/2/take5/components.py
+index ea42cdf..f7b4833 100644
+--- a/2/take5/components.py
++++ b/2/take5/components.py
+@@ -33,4 +33,7 @@ class Stack:
+ 		return self.cards
+ 
+ 	def setCard(self, card):
+-		self.cards.append(card)
+\ No newline at end of file
++		self.cards.append(card)
++
++	def getLength(self):
++		return len(self.cards)
+\ No newline at end of file
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index 427ceb2..75df55d 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -2,8 +2,8 @@
+ import components
+ 
+ class Dealer:
+-	players = [] 
+-	deck = [] 
++	players = []
++	deck = []
+ 	stacks = []
+ 
+ 	def __init__(self, players_list):
+diff --git a/2/take5/main.py b/2/take5/main.py
+index 089bb2b..99c7aac 100644
+--- a/2/take5/main.py
++++ b/2/take5/main.py
+@@ -30,7 +30,7 @@ class Main:
+ 			# do some string interpolation, print it
+ 		else:
+ 			self.runGame()
+-			
++
+ 
+ 	def startRound(self):
+ 		dealer = dealer.Dealer(players_list)
+@@ -63,7 +63,7 @@ class Main:
+ 
+ 		startRound()
+ 
+-		while len(players_list[0].getHand()) > 0:
++		while players_list[0].getHand().getLength() > 0:
+ 			turn()
+ 
+ 		endOfRound()
+diff --git a/2/take5/test_components.py b/2/take5/test_components.py
+index 4b97284..bfc67ba 100644
+--- a/2/take5/test_components.py
++++ b/2/take5/test_components.py
+@@ -36,6 +36,8 @@ class TestComponentsMethods(unittest.TestCase):
+     self.stack1.setCard(self.card2)
+     self.assertEqual(self.stack1.getCards()[1].getNumber(), self.card2.getNumber())
+ 
++  def testGetLength(self):
++    self.assertEqual(self.stack1.getLength(), 1)
+ 
+ if __name__ == '__main__':
+   unittest.main()
+\ No newline at end of file
+diff --git a/2/test_player.py b/2/test_player.py
+index 529a317..8e55987 100644
+--- a/2/test_player.py
++++ b/2/test_player.py
+@@ -93,4 +93,4 @@ class TestPlayerMethods(unittest.TestCase):
+ if __name__ == '__main__':
+     unittest.main()
+ 
+-    
++
+diff --git a/3/components.py b/3/components.py
+index ea42cdf..d279c47 100644
+--- a/3/components.py
++++ b/3/components.py
+@@ -1,5 +1,4 @@
+ # The basic card and stack components for the main components to pass around
+-import random
+ from random import randint
+ 
+ class Card:
+@@ -8,7 +7,7 @@ class Card:
+ 
+ 	def __init__(self, number):
+ 		self.number = number
+-		self.bull = self.setBullNumber(False)
++		self.bull = self.setBullNumber(None)
+ 
+ 	def getNumber(self):
+ 		return self.number
+@@ -18,7 +17,10 @@ class Card:
+ 
+ 	def setBullNumber(self, number):
+ 		if not number:
+-			self.bull = random.randint(2,8)
++			test = randint(2,8)
++			print("We are setting the bull number to: " + str(test))
++			self.bull = test
++			print("The bull number is now: " + str(self.bull))
+ 		else:
+ 			self.bull = number
+ 
+@@ -33,4 +35,11 @@ class Stack:
+ 		return self.cards
+ 
+ 	def setCard(self, card):
+-		self.cards.append(card)
+\ No newline at end of file
++		self.cards.append(card)
++
++	def getLength(self):
++		length = 0
++		for card in self.cards:
++			length += 1
++			#print(card.getNumber())
++		return length
+\ No newline at end of file
+diff --git a/3/main.py b/3/main.py
+index d8ce6d9..d7e9632 100644
+--- a/3/main.py
++++ b/3/main.py
+@@ -30,7 +30,7 @@ class Main:
+ 				print player[0] + " " + player[1]
+ 		else:
+ 			self.runGame()
+-			
++
+ 
+ 	def startRound(self):
+ 		dealer = dealer.Dealer(players_list)
+@@ -60,7 +60,7 @@ class Main:
+ 
+ 		startRound()
+ 
+-		while len(players_list[0].getHand()) > 0:
++		while players_list[0].getHand().getLength() > 0:
+ 			turn()
+ 
+ 		endOfRound()
+diff --git a/3/player.py b/3/player.py
+index 883bb36..8c4ff9e 100644
+--- a/3/player.py
++++ b/3/player.py
+@@ -32,8 +32,9 @@ class Player:
+ 
+ 	def totalBull(self, stack):
+ 		points = 0
+-		for card in stack:
+-			points += card.getBullPoints()
++		for card in stack.getCards():
++			print("In Total BUll, the bull number is: " + str(card.getBullNumber()))
++			points += card.getBullNumber()
+ 		return points
+ 
+ 	def pickStack(self, stacks):
+diff --git a/3/player.pyc b/3/player.pyc
+new file mode 100644
+index 0000000000000000000000000000000000000000..8373a7fb68aa8c38bb1682951319b3e16ac1008a
+GIT binary patch
+literal 2231
+zcmcIl+iuf95S?{;OKAX6T9A-X5HFEv2@)U#LR{L4%S%)_TtuYGa_yyY<2u2+m8jG{
+zm4D$o_$EF8&Kb8Q5)TLwV((_Wwr9?qojI<3Z_Ho&_VryNC%+p0pJBM0m{OcZa*-a4
+zK+-8mYw|_pSmZ;`@Lsnyjpwo-_;vgY%*{MLu;rOMgQYbLw~fid5#FjxuO>UN;STdO
+z{lIB&hB0W&o`mVmF(g;&l1{5JFX@aL=Omp~V?ok6H5w9jTk{B$VMr2SIvwk<T?5mh
+zkwcM4GwZepuA{S`f?33Sw#8TU%Gvy5$R}DD)#M(+YQJ^1bnWMPp1EPs-Ykc^Hu0{V
+zxO?~S+*ys|JhkQOAhrFt^zFOtkrHxybl~Ukb`)hr=A)<%+cB1ygh5V+BAvwoVD1X&
+z9m9AI%iH^T9*u@s;ho+J>0@FDNzsn=YY4KbF&41!moO{N2z#>FND8oZut^vG9+hrs
+zKQ7Y$z}gA2SMYvm4B2V%@&Atn7}ALrpR!h6Vre3UN8iqR0$idwR(GuX8ioRV3L_Oc
+z(#}2#<nxM_p^=TP8*)^W!<y^{Z2rSQ22)Zla|KU-TITs4&DGTuI@*CP`c>XL!@_Dt
+zo@LKX+~3=_WsAWzUC+`^`a@@nD2dC|v+nxYPTx8oeT);UZg^*6rOsw#Yp%oTRoIRp
+z#mwNiXfByXpaMdK97@j%7?3Iw^N>n{{sb2rTerv!q{~BGP8m8ja^>YK@N~BF0PlTT
+z1WN%}A~h9Ds<W?)=9{69^XA&yJYQ-0zHPG6n}zb!%-o}9#U@dMKZ16iPMk0OSl9kW
+zEY;chI2ouoSHcmV$Ku3@<d%AZr)u0_IBGDNTr^AOviY6IHQZ*Ifyevgabs&$s|$*!
+z41znVA7&Jrk%36r&`JY=4W1Q;l`^uHLq-f)+G8cfkCA5XJoAN|L#AyS=~}qRhcPD7
+zU!-7^C4(-Brq?qH8s@rbm`;lbPV}E&nJDsv97TJ>bU(*sm4S*Tn>EzV;Qof(z>v9w
+z-20HBLh7HU8?thLrJ>fpeWXG-)QWe@FxU+^f_m-jsMlw!fFxeCNQQeOG&sIU`tn5K
+QC})o=mYy)8YS%*W6ZfUKZ~y=R
+
+literal 0
+HcmV?d00001
+
+diff --git a/3/test_components.py b/3/test_components.py
+index 4b97284..bfc67ba 100644
+--- a/3/test_components.py
++++ b/3/test_components.py
+@@ -36,6 +36,8 @@ class TestComponentsMethods(unittest.TestCase):
+     self.stack1.setCard(self.card2)
+     self.assertEqual(self.stack1.getCards()[1].getNumber(), self.card2.getNumber())
+ 
++  def testGetLength(self):
++    self.assertEqual(self.stack1.getLength(), 1)
+ 
+ if __name__ == '__main__':
+   unittest.main()
+\ No newline at end of file
+diff --git a/3/test_dealer.py b/3/test_dealer.py
+index 4a22104..b549e30 100644
+--- a/3/test_dealer.py
++++ b/3/test_dealer.py
+@@ -1,4 +1,4 @@
+-# Unit-testing suite for 6 Nimmt! methods in dealer component (no player component)
++# Unit-testing suite for 6 Nimmt! methods in dealer component
+ import unittest
+ import dealer
+ import components
+diff --git a/3/test_main.py b/3/test_main.py
+index a587992..f937f71 100644
+--- a/3/test_main.py
++++ b/3/test_main.py
+@@ -1,4 +1,4 @@
+-# Unit-testing for main component methods. Due to lack of player component there are no tests.
++# Unit-testing for main component methods.
+ 
+ import unittest
+ import dealer
+diff --git a/3/test_player.py b/3/test_player.py
+index f1e9c2d..1548d1b 100644
+--- a/3/test_player.py
++++ b/3/test_player.py
+@@ -8,6 +8,7 @@ class TestPlayerMethods(unittest.TestCase):
+ 
+   def setUp(self):
+     self.card1 = components.Card(1)
++    print("Just setup card1 with bull number: " + str(self.card1.getBullNumber()))
+     self.card2 = components.Card(2)
+     self.stack1 = components.Stack(self.card1)
+     self.player0 = player.Player(0)
+@@ -19,28 +20,36 @@ class TestPlayerMethods(unittest.TestCase):
+     del self.player0
+ 
+ 
+-  #getBullPoints
+   def testGetBullPoints(self):
+     self.assertEqual(self.player0.getBullPoints(), 0)
+ 
+-  #getName
+   def testGetName(self):
+     self.assertEqual(self.player0.getName(), 0)
+ 
+-  #getHand
+   def testGetHand(self):
++    self.assertEqual(self.player0.getHand(), [])
+ 
++  def testSetHand(self):
++    self.player0.setHand([self.card1])
++    self.assertEqual(len(self.player0.getHand()), 1)
++    #NOT WORKING
+ 
+   #playCard
+   def testPlayCard(self):
+-
++    self.player0.setHand([self.card1])
++    self.assertEqual(self.player0.playCard(), self.card1)
+ 
+   #totalBull
+   def testTotalBull(self):
++    self.assertEqual(self.player0.totalBull(self.stack1), self.card1.getBullPoints())
+ 
+   #pickStack
+   def testPickStack(self):
++    print("In Tests, card1 bull number is: " + str(self.card1.getBullNumber()))
++    self.assertEqual(self.player0.pickStack([self.stack1]), self.stack1)
+ 
++  def testPickNoStack(self):
++    self.assertEqual(self.player0.pickStack([]), None)
+ 
+ if __name__ == '__main__':
+     unittest.main()
+-- 
+2.5.4 (Apple Git-61)
+
+
+From ca739becaa74563e7e735fbf8002718f46b51ee0 Mon Sep 17 00:00:00 2001
+From: aalder <alder.a@husky.neu.edu>
+Date: Tue, 26 Jan 2016 15:17:43 -0500
+Subject: [PATCH 05/14] debugging dealer and main based on tests and
+ integrating player
+
+---
+ 3/dealer.py | 13 +++++--------
+ 3/main.py   | 42 ++++++++++++++++++------------------------
+ 2 files changed, 23 insertions(+), 32 deletions(-)
+
+diff --git a/3/dealer.py b/3/dealer.py
+index d93a4eb..464ecb7 100644
+--- a/3/dealer.py
++++ b/3/dealer.py
+@@ -2,8 +2,8 @@
+ import components
+ 
+ class Dealer:
+-	players = [] 
+-	deck = [] 
++	players = []
++	deck = []
+ 	stacks = []
+ 
+ 	def __init__(self, players_list):
+@@ -45,24 +45,21 @@ class Dealer:
+ 			hand.append(self.deck.pop())
+ 		return hand
+ 
+-	def getKey(stack):
+-				return stack.getCards()[-1].number
+-
+ 	def updateStacks(self, players_card):
+ 		card = players_card[1]
+ 		stacks_to_pass = []
+ 
+-		stacks = sorted(self.stacks, key=self.getKey(), reverse=True)
++		stacks = sorted(self.stacks, key=lambda stack: stack.getCards()[-1], reverse=True)
+ 		for stack in stacks:
+ 			if card.number > stack.getCards()[-1].number:
+-				if len(stack) < 5:
++				if stack.getLength() < 5:
+ 					stack.setCard(card)
+ 				else:
+ 					stacks_to_pass.append(stack)
+ 					self.removeStack(stack, card)
+ 					break
+ 			else:
+-				if stack.index() == 3:
++				if self.stacks.index(stack) == 3:
+ 					stacks_to_pass = stacks
+ 
+ 		return stacks_to_pass
+diff --git a/3/main.py b/3/main.py
+index d7e9632..a74ae8d 100644
+--- a/3/main.py
++++ b/3/main.py
+@@ -1,5 +1,5 @@
+ # Implements the protocols between the Player and the rest of the game components of 6 Nimmt!
+-
++import sys
+ import components
+ import dealer
+ import player
+@@ -8,22 +8,19 @@ class Main:
+ 	players = []
+ 	dealer = None
+ 
+-	def __init__(players):
++	def __init__(self, players):
+ 		players_list = []
+-		for i in range(players):
++		for i in range(int(players)):
+ 			players_list.append(player.Player(i))
+ 		self.players = players_list
+-		runGame()
+-
+-	def getKey(item):
+-		return item[1]
++		self.runGame()
+ 
+ 	def endOfRound(self):
+ 		points_list = []
+ 		for player in self.players:
+ 			points_list.append((player.getName(), player.getBullPoints()))
+ 
+-		players = sorted(points_list, key=self.getKey())
++		players = sorted(points_list, key=lambda player: player[1])
+ 
+ 		if players[0][1] >= 66:
+ 			for player in players:
+@@ -33,23 +30,19 @@ class Main:
+ 
+ 
+ 	def startRound(self):
+-		dealer = dealer.Dealer(players_list)
+-		self.dealer = dealer
++		self.dealer = dealer.Dealer(self.players)
+ 
+-		for player in players_list:
+-			player.setHand(dealer.dealFirst())
+-
+-		dealer.setStacks()
++		for player in self.players:
++			player.setHand(self.dealer.dealFirst())
+ 
+-		for player in players_list:
+-			player.setCurrentStacks(dealer.getStacks())
++		self.dealer.setStacks()
+ 
+ 	def turn(self):
+ 		cards_played = []
+ 		for player in self.players:
+ 			cards_played.append((player.getName(), player.playCard()))
+ 
+-		cards_played = sorted(cards_played, key=self.getKey())
++		cards_played = sorted(cards_played, key=lambda card: card[1])
+ 
+ 		for players_card in cards_played:
+ 			stacks = self.dealer.updateStacks(players_card)
+@@ -58,16 +51,17 @@ class Main:
+ 
+ 	def runGame(self):
+ 
+-		startRound()
++		self.startRound()
+ 
+-		while players_list[0].getHand().getLength() > 0:
+-			turn()
++		while len(self.players[0].getHand()) > 0:
++			self.turn()
+ 
+-		endOfRound()
++		self.endOfRound()
+ 
+-def main():
+-	Main()
++def main(num_players):
++	Main(num_players)
+ 
+ if __name__ == "__main__":
+-    main()
++	print sys.argv[1]
++	main(sys.argv[1])
+ 
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 795ec397c47b63d97529301f6ac78da333e128fa Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Fri, 29 Jan 2016 17:41:45 -0500
+Subject: [PATCH 06/14] general cleanup in dealer, main, player: player no
+ longer calculates bull_points, main does
+
+---
+ 3/dealer.py | 23 +++++++++++++----------
+ 3/main.py   | 36 +++++++++++++++++++++---------------
+ 3/player.py |  8 +++-----
+ 3 files changed, 37 insertions(+), 30 deletions(-)
+
+diff --git a/3/dealer.py b/3/dealer.py
+index 464ecb7..02b6778 100644
+--- a/3/dealer.py
++++ b/3/dealer.py
+@@ -1,5 +1,11 @@
+ # The Dealer of a 6 Nimmt! game, handles dealing Cards to Players and setting up the Stacks
+ import components
++import random
++
++HANDSIZE = 10
++TOTALSTACKS = 4
++MAXSTACK = 5
++MAXFACEVALUE = 104
+ 
+ class Dealer:
+ 	players = []
+@@ -8,9 +14,9 @@ class Dealer:
+ 
+ 	def __init__(self, players_list):
+ 		self.players = players_list
+-		for i in range(1, 105):
++		for i in range(1, MAXFACEVALUE):
+ 			self.deck.append(components.Card(i))
+-		self.shuffleCards()
++		random.shuffle(self.deck)
+ 
+ 	def getPlayers(self):
+ 		return self.players
+@@ -32,17 +38,14 @@ class Dealer:
+ 
+ 	def setStacks(self):
+ 		stacks = []
+-		for i in range(1,5):
++		for i in range(TOTALSTACKS):
+ 			stacks.append(components.Stack(self.deck.pop(1)))
+ 		self.stacks = stacks
+ 
+-	def shuffleCards(self):
+-		pass
+-
+ 	def dealFirst(self):
+-		hand = [self.deck.pop()]
+-		for i in range(0, 9):
+-			hand.append(self.deck.pop())
++		hand = []
++		for i in range(HANDSIZE):
++			hand.append(self.deck.pop(1))
+ 		return hand
+ 
+ 	def updateStacks(self, players_card):
+@@ -52,7 +55,7 @@ class Dealer:
+ 		stacks = sorted(self.stacks, key=lambda stack: stack.getCards()[-1], reverse=True)
+ 		for stack in stacks:
+ 			if card.number > stack.getCards()[-1].number:
+-				if stack.getLength() < 5:
++				if stack.getLength() < MAXSTACK:
+ 					stack.setCard(card)
+ 				else:
+ 					stacks_to_pass.append(stack)
+diff --git a/3/main.py b/3/main.py
+index a74ae8d..1df22d3 100644
+--- a/3/main.py
++++ b/3/main.py
+@@ -4,27 +4,24 @@ import components
+ import dealer
+ import player
+ 
++LOSINGSCORE = 66 
++
+ class Main:
+ 	players = []
+ 	dealer = None
+ 
+ 	def __init__(self, players):
+-		players_list = []
+ 		for i in range(int(players)):
+-			players_list.append(player.Player(i))
+-		self.players = players_list
++			(self.players.append({'player' : player.Player(i),
++								 'bull_points':  0}))
+ 		self.runGame()
+ 
+ 	def endOfRound(self):
+-		points_list = []
+-		for player in self.players:
+-			points_list.append((player.getName(), player.getBullPoints()))
++		players = sorted(self.players, key=lambda player: player['bull_points'])
+ 
+-		players = sorted(points_list, key=lambda player: player[1])
+-
+-		if players[0][1] >= 66:
++		if players[-1]['bull_points'] >= LOSINGSCORE:
+ 			for player in players:
+-				print player[0] + " " + player[1]
++				print player['player'].getName() + " " + player['bull_points']
+ 		else:
+ 			self.runGame()
+ 
+@@ -33,27 +30,37 @@ class Main:
+ 		self.dealer = dealer.Dealer(self.players)
+ 
+ 		for player in self.players:
+-			player.setHand(self.dealer.dealFirst())
++			player['player'].setHand(self.dealer.dealFirst())
+ 
+ 		self.dealer.setStacks()
+ 
++	def totalBull(self, stack):
++		points = 0
++		for card in stack.getCards():
++			# print("In Total BUll, the bull number is: " + str(card.getBullNumber()))
++			points += card.getBullNumber()
++		return points
++
+ 	def turn(self):
+ 		cards_played = []
+ 		for player in self.players:
+-			cards_played.append((player.getName(), player.playCard()))
++			cards_played.append((player['player'], player['player'].playCard(self.dealer.getDeck())))
+ 
+ 		cards_played = sorted(cards_played, key=lambda card: card[1])
+ 
+ 		for players_card in cards_played:
++			current_player = players_card[0]
+ 			stacks = self.dealer.updateStacks(players_card)
+-			choice = self.players[players_card[0]].pickStack(stacks)
++			choice = current_player.pickStack(stacks)
++			# Clean this shit up. Should we be using a hash map?
++			self.player.index(current_player)['bull_points'] += self.totalBull(choice)
+ 			self.dealer.removeStack(choice, players_card)
+ 
+ 	def runGame(self):
+ 
+ 		self.startRound()
+ 
+-		while len(self.players[0].getHand()) > 0:
++		while len(self.players[0]['player'].getHand()) > 0:
+ 			self.turn()
+ 
+ 		self.endOfRound()
+@@ -62,6 +69,5 @@ def main(num_players):
+ 	Main(num_players)
+ 
+ if __name__ == "__main__":
+-	print sys.argv[1]
+ 	main(sys.argv[1])
+ 
+diff --git a/3/player.py b/3/player.py
+index 8c4ff9e..24b24d4 100644
+--- a/3/player.py
++++ b/3/player.py
+@@ -4,14 +4,11 @@ import components
+ class Player:
+ 	name = None
+ 	hand = []
+-	bull_points = 0
++	current_deck = []
+ 
+ 	def __init__(self, name):
+ 		self.name = name
+ 
+-	def getBullPoints(self):
+-		return self.bull_points
+-
+ 	def getName(self):
+ 		return self.name
+ 
+@@ -21,7 +18,8 @@ class Player:
+ 	def setHand(self, hand):
+ 		self.hand = hand
+ 
+-	def playCard(self):
++	def playCard(self, deck):
++		self.current_deck = deck
+ 		chosen_card = None
+ 		highest_face = 0
+ 		for card in self.hand:
+-- 
+2.5.4 (Apple Git-61)
+
+
+From f5147d3e4b7ea43b81b41037f2872c25cd6be9d7 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sat, 30 Jan 2016 17:00:13 -0500
+Subject: [PATCH 07/14] updated tests, took runGame out of init
+
+---
+ 3/main.py        | 15 ++++++++-------
+ 3/test_main.py   |  4 ++--
+ 3/test_player.py |  7 ++-----
+ 3 files changed, 12 insertions(+), 14 deletions(-)
+
+diff --git a/3/main.py b/3/main.py
+index 1df22d3..755208e 100644
+--- a/3/main.py
++++ b/3/main.py
+@@ -11,10 +11,11 @@ class Main:
+ 	dealer = None
+ 
+ 	def __init__(self, players):
++		if int(players) < 2 or int(players) > 6:
++			raise Exception("Illegal Number of Players, please type a number between 2 and 6")
+ 		for i in range(int(players)):
+ 			(self.players.append({'player' : player.Player(i),
+ 								 'bull_points':  0}))
+-		self.runGame()
+ 
+ 	def endOfRound(self):
+ 		players = sorted(self.players, key=lambda player: player['bull_points'])
+@@ -37,14 +38,13 @@ class Main:
+ 	def totalBull(self, stack):
+ 		points = 0
+ 		for card in stack.getCards():
+-			# print("In Total BUll, the bull number is: " + str(card.getBullNumber()))
+ 			points += card.getBullNumber()
+ 		return points
+ 
+ 	def turn(self):
+ 		cards_played = []
+ 		for player in self.players:
+-			cards_played.append((player['player'], player['player'].playCard(self.dealer.getDeck())))
++			cards_played.append((player['player'], player['player'].playCard(self.dealer.getStacks())))
+ 
+ 		cards_played = sorted(cards_played, key=lambda card: card[1])
+ 
+@@ -52,9 +52,9 @@ class Main:
+ 			current_player = players_card[0]
+ 			stacks = self.dealer.updateStacks(players_card)
+ 			choice = current_player.pickStack(stacks)
+-			# Clean this shit up. Should we be using a hash map?
+-			self.player.index(current_player)['bull_points'] += self.totalBull(choice)
+-			self.dealer.removeStack(choice, players_card)
++			if choice is not []:
++				self.player.index(current_player)['bull_points'] += self.totalBull(choice)
++				self.dealer.removeStack(choice, players_card)
+ 
+ 	def runGame(self):
+ 
+@@ -66,7 +66,8 @@ class Main:
+ 		self.endOfRound()
+ 
+ def main(num_players):
+-	Main(num_players)
++	game = Main(num_players)
++	game.runGame()
+ 
+ if __name__ == "__main__":
+ 	main(sys.argv[1])
+diff --git a/3/test_main.py b/3/test_main.py
+index f937f71..3a03832 100644
+--- a/3/test_main.py
++++ b/3/test_main.py
+@@ -3,13 +3,13 @@
+ import unittest
+ import dealer
+ import components
+-#import player
++import player
+ import main
+ 
+ class TestMainMethods(unittest.TestCase):
+ 
+   def setUp(self):
+-    self.game = main(4)
++    self.game = main.main(4)
+ 
+   def tearDown(self):
+     del self.game
+diff --git a/3/test_player.py b/3/test_player.py
+index 1548d1b..6fd0257 100644
+--- a/3/test_player.py
++++ b/3/test_player.py
+@@ -11,6 +11,7 @@ class TestPlayerMethods(unittest.TestCase):
+     print("Just setup card1 with bull number: " + str(self.card1.getBullNumber()))
+     self.card2 = components.Card(2)
+     self.stack1 = components.Stack(self.card1)
++    self.stack2 = components.Stack(self.card2)
+     self.player0 = player.Player(0)
+ 
+   def tearDown(self):
+@@ -19,10 +20,6 @@ class TestPlayerMethods(unittest.TestCase):
+     del self.stack1
+     del self.player0
+ 
+-
+-  def testGetBullPoints(self):
+-    self.assertEqual(self.player0.getBullPoints(), 0)
+-
+   def testGetName(self):
+     self.assertEqual(self.player0.getName(), 0)
+ 
+@@ -37,7 +34,7 @@ class TestPlayerMethods(unittest.TestCase):
+   #playCard
+   def testPlayCard(self):
+     self.player0.setHand([self.card1])
+-    self.assertEqual(self.player0.playCard(), self.card1)
++    self.assertEqual(self.player0.playCard(self.stack2), self.card1)
+ 
+   #totalBull
+   def testTotalBull(self):
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 5e5718165192637018b515302da16ac81969d364 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sat, 30 Jan 2016 17:15:42 -0500
+Subject: [PATCH 08/14] initialized stacks correctly...whomp
+
+---
+ 3/components.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/3/components.py b/3/components.py
+index d279c47..29c88c2 100644
+--- a/3/components.py
++++ b/3/components.py
+@@ -29,7 +29,7 @@ class Stack:
+ 	cards = []
+ 
+ 	def __init__(self, card):
+-		self.cards.append(card)
++		self.cards = [card]
+ 
+ 	def getCards(self):
+ 		return self.cards
+-- 
+2.5.4 (Apple Git-61)
+
+
+From b5153fcffb3cb279f42f2a3ac115aac31c9faf05 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sat, 30 Jan 2016 18:05:25 -0500
+Subject: [PATCH 09/14] finally debugged the Nonetypeerror in getBullNumber
+
+---
+ 3/components.py      |  4 ++--
+ 3/player.py          | 17 ++++++++++-------
+ 3/test_components.py |  2 +-
+ 3/test_player.py     | 10 ++--------
+ 4 files changed, 15 insertions(+), 18 deletions(-)
+
+diff --git a/3/components.py b/3/components.py
+index 29c88c2..3e9c8eb 100644
+--- a/3/components.py
++++ b/3/components.py
+@@ -7,7 +7,7 @@ class Card:
+ 
+ 	def __init__(self, number):
+ 		self.number = number
+-		self.bull = self.setBullNumber(None)
++		self.setBullNumber(None)
+ 
+ 	def getNumber(self):
+ 		return self.number
+@@ -16,7 +16,7 @@ class Card:
+ 		return self.bull
+ 
+ 	def setBullNumber(self, number):
+-		if not number:
++		if (type(number) is not int) or (number < 2) or (number > 7):
+ 			test = randint(2,8)
+ 			print("We are setting the bull number to: " + str(test))
+ 			self.bull = test
+diff --git a/3/player.py b/3/player.py
+index 24b24d4..6da2545 100644
+--- a/3/player.py
++++ b/3/player.py
+@@ -30,14 +30,17 @@ class Player:
+ 
+ 	def totalBull(self, stack):
+ 		points = 0
+-		for card in stack.getCards():
+-			print("In Total BUll, the bull number is: " + str(card.getBullNumber()))
+-			points += card.getBullNumber()
++		if stack:
++			for card in stack.getCards():
++				points += card.getBullNumber()
+ 		return points
+ 
+ 	def pickStack(self, stacks):
+-		selected_stack = None
+-		for stack in stacks:
+-			if self.totalBull(stack) < self.totalBull(selected_stack):
+-				selected_stack = stack
++		try: 
++			selected_stack = stacks[0]
++			for stack in stacks:
++				if self.totalBull(stack) < self.totalBull(selected_stack):
++					selected_stack = stack
++		except:
++			selected_stack = []
+ 		return selected_stack
+diff --git a/3/test_components.py b/3/test_components.py
+index bfc67ba..687c66f 100644
+--- a/3/test_components.py
++++ b/3/test_components.py
+@@ -20,7 +20,7 @@ class TestComponentsMethods(unittest.TestCase):
+ 
+   def testGetBullNumber(self):
+     bullNum = self.card1.getBullNumber()
+-    if((bullNum <= 7) or (bullNum >= 2)) :
++    if((bullNum <= 7) or (bullNum >= 2)) and type(bullNum) is int:
+       self.assertEqual(True, True)
+     else :
+       self.assertEqual(True, False)
+diff --git a/3/test_player.py b/3/test_player.py
+index 6fd0257..8e53678 100644
+--- a/3/test_player.py
++++ b/3/test_player.py
+@@ -8,7 +8,6 @@ class TestPlayerMethods(unittest.TestCase):
+ 
+   def setUp(self):
+     self.card1 = components.Card(1)
+-    print("Just setup card1 with bull number: " + str(self.card1.getBullNumber()))
+     self.card2 = components.Card(2)
+     self.stack1 = components.Stack(self.card1)
+     self.stack2 = components.Stack(self.card2)
+@@ -29,24 +28,19 @@ class TestPlayerMethods(unittest.TestCase):
+   def testSetHand(self):
+     self.player0.setHand([self.card1])
+     self.assertEqual(len(self.player0.getHand()), 1)
+-    #NOT WORKING
+ 
+-  #playCard
+   def testPlayCard(self):
+     self.player0.setHand([self.card1])
+     self.assertEqual(self.player0.playCard(self.stack2), self.card1)
+ 
+-  #totalBull
+   def testTotalBull(self):
+-    self.assertEqual(self.player0.totalBull(self.stack1), self.card1.getBullPoints())
++    self.assertEqual(self.player0.totalBull(self.stack1), self.card1.getBullNumber())
+ 
+-  #pickStack
+   def testPickStack(self):
+-    print("In Tests, card1 bull number is: " + str(self.card1.getBullNumber()))
+     self.assertEqual(self.player0.pickStack([self.stack1]), self.stack1)
+ 
+   def testPickNoStack(self):
+-    self.assertEqual(self.player0.pickStack([]), None)
++    self.assertEqual(self.player0.pickStack([]), [])
+ 
+ if __name__ == '__main__':
+     unittest.main()
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 7bf59882f3df850588495fc9be581d824d8df154 Mon Sep 17 00:00:00 2001
+From: aalder <aalder@ccs.neu.edu>
+Date: Sat, 30 Jan 2016 18:05:55 -0500
+Subject: [PATCH 10/14] Delete the .pyc files
+
+---
+ 3/player.pyc | Bin 2231 -> 0 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ delete mode 100644 3/player.pyc
+
+diff --git a/3/player.pyc b/3/player.pyc
+deleted file mode 100644
+index 8373a7fb68aa8c38bb1682951319b3e16ac1008a..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+HcmV?d00001
+
+literal 2231
+zcmcIl+iuf95S?{;OKAX6T9A-X5HFEv2@)U#LR{L4%S%)_TtuYGa_yyY<2u2+m8jG{
+zm4D$o_$EF8&Kb8Q5)TLwV((_Wwr9?qojI<3Z_Ho&_VryNC%+p0pJBM0m{OcZa*-a4
+zK+-8mYw|_pSmZ;`@Lsnyjpwo-_;vgY%*{MLu;rOMgQYbLw~fid5#FjxuO>UN;STdO
+z{lIB&hB0W&o`mVmF(g;&l1{5JFX@aL=Omp~V?ok6H5w9jTk{B$VMr2SIvwk<T?5mh
+zkwcM4GwZepuA{S`f?33Sw#8TU%Gvy5$R}DD)#M(+YQJ^1bnWMPp1EPs-Ykc^Hu0{V
+zxO?~S+*ys|JhkQOAhrFt^zFOtkrHxybl~Ukb`)hr=A)<%+cB1ygh5V+BAvwoVD1X&
+z9m9AI%iH^T9*u@s;ho+J>0@FDNzsn=YY4KbF&41!moO{N2z#>FND8oZut^vG9+hrs
+zKQ7Y$z}gA2SMYvm4B2V%@&Atn7}ALrpR!h6Vre3UN8iqR0$idwR(GuX8ioRV3L_Oc
+z(#}2#<nxM_p^=TP8*)^W!<y^{Z2rSQ22)Zla|KU-TITs4&DGTuI@*CP`c>XL!@_Dt
+zo@LKX+~3=_WsAWzUC+`^`a@@nD2dC|v+nxYPTx8oeT);UZg^*6rOsw#Yp%oTRoIRp
+z#mwNiXfByXpaMdK97@j%7?3Iw^N>n{{sb2rTerv!q{~BGP8m8ja^>YK@N~BF0PlTT
+z1WN%}A~h9Ds<W?)=9{69^XA&yJYQ-0zHPG6n}zb!%-o}9#U@dMKZ16iPMk0OSl9kW
+zEY;chI2ouoSHcmV$Ku3@<d%AZr)u0_IBGDNTr^AOviY6IHQZ*Ifyevgabs&$s|$*!
+z41znVA7&Jrk%36r&`JY=4W1Q;l`^uHLq-f)+G8cfkCA5XJoAN|L#AyS=~}qRhcPD7
+zU!-7^C4(-Brq?qH8s@rbm`;lbPV}E&nJDsv97TJ>bU(*sm4S*Tn>EzV;Qof(z>v9w
+z-20HBLh7HU8?thLrJ>fpeWXG-)QWe@FxU+^f_m-jsMlw!fFxeCNQQeOG&sIU`tn5K
+QC})o=mYy)8YS%*W6ZfUKZ~y=R
+
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 5e1dc0dbc4073b25f0ede280ce2563233ee3b64a Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sat, 30 Jan 2016 19:04:10 -0500
+Subject: [PATCH 11/14] finally running smoothly
+
+---
+ 3/components.py |  6 ++----
+ 3/dealer.py     |  6 +++---
+ 3/main.py       | 19 ++++++++++++-------
+ 3/player.py     |  1 +
+ 4 files changed, 18 insertions(+), 14 deletions(-)
+
+diff --git a/3/components.py b/3/components.py
+index 3e9c8eb..d96ab1c 100644
+--- a/3/components.py
++++ b/3/components.py
+@@ -17,10 +17,8 @@ class Card:
+ 
+ 	def setBullNumber(self, number):
+ 		if (type(number) is not int) or (number < 2) or (number > 7):
+-			test = randint(2,8)
+-			print("We are setting the bull number to: " + str(test))
+-			self.bull = test
+-			print("The bull number is now: " + str(self.bull))
++			random_bull = randint(2,8)
++			self.bull = random_bull
+ 		else:
+ 			self.bull = number
+ 
+diff --git a/3/dealer.py b/3/dealer.py
+index 02b6778..219235a 100644
+--- a/3/dealer.py
++++ b/3/dealer.py
+@@ -14,7 +14,7 @@ class Dealer:
+ 
+ 	def __init__(self, players_list):
+ 		self.players = players_list
+-		for i in range(1, MAXFACEVALUE):
++		for i in range(1, MAXFACEVALUE+1):
+ 			self.deck.append(components.Card(i))
+ 		random.shuffle(self.deck)
+ 
+@@ -39,13 +39,13 @@ class Dealer:
+ 	def setStacks(self):
+ 		stacks = []
+ 		for i in range(TOTALSTACKS):
+-			stacks.append(components.Stack(self.deck.pop(1)))
++			stacks.append(components.Stack(self.deck.pop()))
+ 		self.stacks = stacks
+ 
+ 	def dealFirst(self):
+ 		hand = []
+ 		for i in range(HANDSIZE):
+-			hand.append(self.deck.pop(1))
++			hand.append(self.deck.pop())
+ 		return hand
+ 
+ 	def updateStacks(self, players_card):
+diff --git a/3/main.py b/3/main.py
+index 755208e..5a67e1b 100644
+--- a/3/main.py
++++ b/3/main.py
+@@ -5,24 +5,28 @@ import dealer
+ import player
+ 
+ LOSINGSCORE = 66 
++MINPLAYERS = 2
++MAXPLAYERS = 4
+ 
+ class Main:
+ 	players = []
+ 	dealer = None
+ 
+ 	def __init__(self, players):
+-		if int(players) < 2 or int(players) > 6:
+-			raise Exception("Illegal Number of Players, please type a number between 2 and 6")
++		if int(players) < MINPLAYERS or int(players) > MAXPLAYERS:
++			raise Exception("Illegal Number of Players, please type a number between {} and {}".format(MINPLAYERS, MAXPLAYERS))
+ 		for i in range(int(players)):
+ 			(self.players.append({'player' : player.Player(i),
++								 'name' : i,
+ 								 'bull_points':  0}))
+ 
+ 	def endOfRound(self):
+ 		players = sorted(self.players, key=lambda player: player['bull_points'])
+ 
+ 		if players[-1]['bull_points'] >= LOSINGSCORE:
++			print "Final Scores: \n "
+ 			for player in players:
+-				print player['player'].getName() + " " + player['bull_points']
++				print "Player {} had {} points \n".format(player['player'].getName(), player['bull_points'])
+ 		else:
+ 			self.runGame()
+ 
+@@ -37,8 +41,9 @@ class Main:
+ 
+ 	def totalBull(self, stack):
+ 		points = 0
+-		for card in stack.getCards():
+-			points += card.getBullNumber()
++		if stack:
++			for card in stack.getCards():
++				points += card.getBullNumber()
+ 		return points
+ 
+ 	def turn(self):
+@@ -53,14 +58,14 @@ class Main:
+ 			stacks = self.dealer.updateStacks(players_card)
+ 			choice = current_player.pickStack(stacks)
+ 			if choice is not []:
+-				self.player.index(current_player)['bull_points'] += self.totalBull(choice)
++				self.players[current_player.getName()]['bull_points'] += self.totalBull(choice)
+ 				self.dealer.removeStack(choice, players_card)
+ 
+ 	def runGame(self):
+ 
+ 		self.startRound()
+ 
+-		while len(self.players[0]['player'].getHand()) > 0:
++		while len(self.players[0]['player'].getHand()) > 0: 
+ 			self.turn()
+ 
+ 		self.endOfRound()
+diff --git a/3/player.py b/3/player.py
+index 6da2545..10e4ead 100644
+--- a/3/player.py
++++ b/3/player.py
+@@ -26,6 +26,7 @@ class Player:
+ 			if card.getNumber() > highest_face:
+ 				chosen_card = card
+ 
++		self.hand.remove(chosen_card)
+ 		return chosen_card
+ 
+ 	def totalBull(self, stack):
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 52e3ff0d630f03193f3a0bd242d80c4568bdb67f Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sat, 30 Jan 2016 19:05:48 -0500
+Subject: [PATCH 12/14] removed magic number in dealer
+
+---
+ 3/dealer.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/3/dealer.py b/3/dealer.py
+index 219235a..55fd09c 100644
+--- a/3/dealer.py
++++ b/3/dealer.py
+@@ -62,7 +62,7 @@ class Dealer:
+ 					self.removeStack(stack, card)
+ 					break
+ 			else:
+-				if self.stacks.index(stack) == 3:
++				if self.stacks.index(stack) == TOTALSTACKS - 1:
+ 					stacks_to_pass = stacks
+ 
+ 		return stacks_to_pass
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 031c0c37fa027f12a861dd05f75f21f8a79f7b89 Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 21:17:19 -0500
+Subject: [PATCH 13/14] in correct location now for patches
+
+---
+ 2/take5/components.py      | 16 +++++----
+ 2/take5/dealer.py          | 30 ++++++++---------
+ 2/take5/main.py            | 81 ++++++++++++++++++++++++----------------------
+ 2/take5/test_components.py |  2 +-
+ 2/take5/test_dealer.py     |  2 +-
+ 3/components.py            | 43 ------------------------
+ 3/dealer.py                | 72 -----------------------------------------
+ 3/main.py                  | 79 --------------------------------------------
+ 3/test_card.py             | 19 -----------
+ 3/test_components.py       | 43 ------------------------
+ 3/test_dealer.py           | 35 --------------------
+ 3/test_main.py             | 19 -----------
+ 12 files changed, 69 insertions(+), 372 deletions(-)
+ delete mode 100644 3/components.py
+ delete mode 100644 3/dealer.py
+ delete mode 100644 3/main.py
+ delete mode 100644 3/test_card.py
+ delete mode 100644 3/test_components.py
+ delete mode 100644 3/test_dealer.py
+ delete mode 100644 3/test_main.py
+
+diff --git a/2/take5/components.py b/2/take5/components.py
+index f7b4833..d96ab1c 100644
+--- a/2/take5/components.py
++++ b/2/take5/components.py
+@@ -1,5 +1,4 @@
+ # The basic card and stack components for the main components to pass around
+-import random
+ from random import randint
+ 
+ class Card:
+@@ -8,7 +7,7 @@ class Card:
+ 
+ 	def __init__(self, number):
+ 		self.number = number
+-		self.bull = self.setBullNumber(False)
++		self.setBullNumber(None)
+ 
+ 	def getNumber(self):
+ 		return self.number
+@@ -17,8 +16,9 @@ class Card:
+ 		return self.bull
+ 
+ 	def setBullNumber(self, number):
+-		if not number:
+-			self.bull = random.randint(2,8)
++		if (type(number) is not int) or (number < 2) or (number > 7):
++			random_bull = randint(2,8)
++			self.bull = random_bull
+ 		else:
+ 			self.bull = number
+ 
+@@ -27,7 +27,7 @@ class Stack:
+ 	cards = []
+ 
+ 	def __init__(self, card):
+-		self.cards.append(card)
++		self.cards = [card]
+ 
+ 	def getCards(self):
+ 		return self.cards
+@@ -36,4 +36,8 @@ class Stack:
+ 		self.cards.append(card)
+ 
+ 	def getLength(self):
+-		return len(self.cards)
+\ No newline at end of file
++		length = 0
++		for card in self.cards:
++			length += 1
++			#print(card.getNumber())
++		return length
+\ No newline at end of file
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index 75df55d..55fd09c 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -1,5 +1,11 @@
+ # The Dealer of a 6 Nimmt! game, handles dealing Cards to Players and setting up the Stacks
+ import components
++import random
++
++HANDSIZE = 10
++TOTALSTACKS = 4
++MAXSTACK = 5
++MAXFACEVALUE = 104
+ 
+ class Dealer:
+ 	players = []
+@@ -8,9 +14,9 @@ class Dealer:
+ 
+ 	def __init__(self, players_list):
+ 		self.players = players_list
+-		for i in range(1, 105):
++		for i in range(1, MAXFACEVALUE+1):
+ 			self.deck.append(components.Card(i))
+-		self.shuffleCards()
++		random.shuffle(self.deck)
+ 
+ 	def getPlayers(self):
+ 		return self.players
+@@ -32,16 +38,13 @@ class Dealer:
+ 
+ 	def setStacks(self):
+ 		stacks = []
+-		for i in range(1,5):
+-			stacks.append(components.Stack(self.deck.pop(1)))
++		for i in range(TOTALSTACKS):
++			stacks.append(components.Stack(self.deck.pop()))
+ 		self.stacks = stacks
+ 
+-	def shuffleCards(self):
+-		pass
+-
+ 	def dealFirst(self):
+-		hand = [self.deck.pop()]
+-		for i in range(0, 9):
++		hand = []
++		for i in range(HANDSIZE):
+ 			hand.append(self.deck.pop())
+ 		return hand
+ 
+@@ -49,20 +52,17 @@ class Dealer:
+ 		card = players_card[1]
+ 		stacks_to_pass = []
+ 
+-		def getKey(stack):
+-			return stack.getCards()[-1].number
+-
+-		stacks = sorted(self.stacks, key=getKey(), reverse=True)
++		stacks = sorted(self.stacks, key=lambda stack: stack.getCards()[-1], reverse=True)
+ 		for stack in stacks:
+ 			if card.number > stack.getCards()[-1].number:
+-				if len(stack) < 5:
++				if stack.getLength() < MAXSTACK:
+ 					stack.setCard(card)
+ 				else:
+ 					stacks_to_pass.append(stack)
+ 					self.removeStack(stack, card)
+ 					break
+ 			else:
+-				if stack.index() == 3:
++				if self.stacks.index(stack) == TOTALSTACKS - 1:
+ 					stacks_to_pass = stacks
+ 
+ 		return stacks_to_pass
+diff --git a/2/take5/main.py b/2/take5/main.py
+index 99c7aac..5a67e1b 100644
+--- a/2/take5/main.py
++++ b/2/take5/main.py
+@@ -1,76 +1,79 @@
+ # Implements the protocols between the Player and the rest of the game components of 6 Nimmt!
+-
++import sys
+ import components
+ import dealer
+ import player
+ 
++LOSINGSCORE = 66 
++MINPLAYERS = 2
++MAXPLAYERS = 4
++
+ class Main:
+ 	players = []
+ 	dealer = None
+ 
+-	def __init__(players):
+-		players_list = []
+-		for i in range(players):
+-			players_list.append(player.Player(i))
+-		self.players = players_list
+-		runGame()
++	def __init__(self, players):
++		if int(players) < MINPLAYERS or int(players) > MAXPLAYERS:
++			raise Exception("Illegal Number of Players, please type a number between {} and {}".format(MINPLAYERS, MAXPLAYERS))
++		for i in range(int(players)):
++			(self.players.append({'player' : player.Player(i),
++								 'name' : i,
++								 'bull_points':  0}))
+ 
+ 	def endOfRound(self):
+-		points_list = []
+-		for player in self.players:
+-			points_list.append((player.name, player.getBullPoints()))
+-
+-		def getKey(item):
+-			return item[1]
++		players = sorted(self.players, key=lambda player: player['bull_points'])
+ 
+-		players = sorted(points_list, key=getKey())
+-
+-		if players[0][1] >= 66:
+-			announcement = {}
+-			# do some string interpolation, print it
++		if players[-1]['bull_points'] >= LOSINGSCORE:
++			print "Final Scores: \n "
++			for player in players:
++				print "Player {} had {} points \n".format(player['player'].getName(), player['bull_points'])
+ 		else:
+ 			self.runGame()
+ 
+ 
+ 	def startRound(self):
+-		dealer = dealer.Dealer(players_list)
+-		self.dealer = dealer
++		self.dealer = dealer.Dealer(self.players)
+ 
+-		for player in players_list:
+-			player.setHand(dealer.dealFirst())
++		for player in self.players:
++			player['player'].setHand(self.dealer.dealFirst())
+ 
+-		dealer.setStacks()
++		self.dealer.setStacks()
+ 
+-		for player in players_list:
+-			player.setCurrentStacks(dealer.getStacks())
++	def totalBull(self, stack):
++		points = 0
++		if stack:
++			for card in stack.getCards():
++				points += card.getBullNumber()
++		return points
+ 
+ 	def turn(self):
+ 		cards_played = []
+ 		for player in self.players:
+-			cards_played.append((player.getName(), player.playCard()))
+-
+-		def getKey(item):
+-			return item[1]
++			cards_played.append((player['player'], player['player'].playCard(self.dealer.getStacks())))
+ 
+-		cards_played = sorted(cards_played, key=getKey)
++		cards_played = sorted(cards_played, key=lambda card: card[1])
+ 
+ 		for players_card in cards_played:
++			current_player = players_card[0]
+ 			stacks = self.dealer.updateStacks(players_card)
+-			choice = self.players[players_card[0]].pickStack(stacks)
+-			self.dealer.removeStack(choice, players_card)
++			choice = current_player.pickStack(stacks)
++			if choice is not []:
++				self.players[current_player.getName()]['bull_points'] += self.totalBull(choice)
++				self.dealer.removeStack(choice, players_card)
+ 
+ 	def runGame(self):
+ 
+-		startRound()
++		self.startRound()
+ 
+-		while players_list[0].getHand().getLength() > 0:
+-			turn()
++		while len(self.players[0]['player'].getHand()) > 0: 
++			self.turn()
+ 
+-		endOfRound()
++		self.endOfRound()
+ 
+-def main():
+-	Main()
++def main(num_players):
++	game = Main(num_players)
++	game.runGame()
+ 
+ if __name__ == "__main__":
+-    main()
++	main(sys.argv[1])
+ 
+diff --git a/2/take5/test_components.py b/2/take5/test_components.py
+index bfc67ba..687c66f 100644
+--- a/2/take5/test_components.py
++++ b/2/take5/test_components.py
+@@ -20,7 +20,7 @@ class TestComponentsMethods(unittest.TestCase):
+ 
+   def testGetBullNumber(self):
+     bullNum = self.card1.getBullNumber()
+-    if((bullNum <= 7) or (bullNum >= 2)) :
++    if((bullNum <= 7) or (bullNum >= 2)) and type(bullNum) is int:
+       self.assertEqual(True, True)
+     else :
+       self.assertEqual(True, False)
+diff --git a/2/take5/test_dealer.py b/2/take5/test_dealer.py
+index 4a22104..b549e30 100644
+--- a/2/take5/test_dealer.py
++++ b/2/take5/test_dealer.py
+@@ -1,4 +1,4 @@
+-# Unit-testing suite for 6 Nimmt! methods in dealer component (no player component)
++# Unit-testing suite for 6 Nimmt! methods in dealer component
+ import unittest
+ import dealer
+ import components
+diff --git a/3/components.py b/3/components.py
+deleted file mode 100644
+index d96ab1c..0000000
+--- a/3/components.py
++++ /dev/null
+@@ -1,43 +0,0 @@
+-# The basic card and stack components for the main components to pass around
+-from random import randint
+-
+-class Card:
+-	number = 0
+-	bull = 0
+-
+-	def __init__(self, number):
+-		self.number = number
+-		self.setBullNumber(None)
+-
+-	def getNumber(self):
+-		return self.number
+-
+-	def getBullNumber(self):
+-		return self.bull
+-
+-	def setBullNumber(self, number):
+-		if (type(number) is not int) or (number < 2) or (number > 7):
+-			random_bull = randint(2,8)
+-			self.bull = random_bull
+-		else:
+-			self.bull = number
+-
+-
+-class Stack:
+-	cards = []
+-
+-	def __init__(self, card):
+-		self.cards = [card]
+-
+-	def getCards(self):
+-		return self.cards
+-
+-	def setCard(self, card):
+-		self.cards.append(card)
+-
+-	def getLength(self):
+-		length = 0
+-		for card in self.cards:
+-			length += 1
+-			#print(card.getNumber())
+-		return length
+\ No newline at end of file
+diff --git a/3/dealer.py b/3/dealer.py
+deleted file mode 100644
+index 55fd09c..0000000
+--- a/3/dealer.py
++++ /dev/null
+@@ -1,72 +0,0 @@
+-# The Dealer of a 6 Nimmt! game, handles dealing Cards to Players and setting up the Stacks
+-import components
+-import random
+-
+-HANDSIZE = 10
+-TOTALSTACKS = 4
+-MAXSTACK = 5
+-MAXFACEVALUE = 104
+-
+-class Dealer:
+-	players = []
+-	deck = []
+-	stacks = []
+-
+-	def __init__(self, players_list):
+-		self.players = players_list
+-		for i in range(1, MAXFACEVALUE+1):
+-			self.deck.append(components.Card(i))
+-		random.shuffle(self.deck)
+-
+-	def getPlayers(self):
+-		return self.players
+-
+-	def setPlayers(self, group):
+-		self.players = group
+-
+-	def addPlayer(self, player):
+-		self.players.append(player)
+-
+-	def getDeck(self):
+-		return self.deck
+-
+-	def setDeck(self, cards):
+-		self.deck = cards
+-
+-	def getStacks(self):
+-		return self.stacks
+-
+-	def setStacks(self):
+-		stacks = []
+-		for i in range(TOTALSTACKS):
+-			stacks.append(components.Stack(self.deck.pop()))
+-		self.stacks = stacks
+-
+-	def dealFirst(self):
+-		hand = []
+-		for i in range(HANDSIZE):
+-			hand.append(self.deck.pop())
+-		return hand
+-
+-	def updateStacks(self, players_card):
+-		card = players_card[1]
+-		stacks_to_pass = []
+-
+-		stacks = sorted(self.stacks, key=lambda stack: stack.getCards()[-1], reverse=True)
+-		for stack in stacks:
+-			if card.number > stack.getCards()[-1].number:
+-				if stack.getLength() < MAXSTACK:
+-					stack.setCard(card)
+-				else:
+-					stacks_to_pass.append(stack)
+-					self.removeStack(stack, card)
+-					break
+-			else:
+-				if self.stacks.index(stack) == TOTALSTACKS - 1:
+-					stacks_to_pass = stacks
+-
+-		return stacks_to_pass
+-
+-	def removeStack(self, stack, players_card):
+-		[[players_card] if x==stack else x for x in self.stacks]
+-
+diff --git a/3/main.py b/3/main.py
+deleted file mode 100644
+index 5a67e1b..0000000
+--- a/3/main.py
++++ /dev/null
+@@ -1,79 +0,0 @@
+-# Implements the protocols between the Player and the rest of the game components of 6 Nimmt!
+-import sys
+-import components
+-import dealer
+-import player
+-
+-LOSINGSCORE = 66 
+-MINPLAYERS = 2
+-MAXPLAYERS = 4
+-
+-class Main:
+-	players = []
+-	dealer = None
+-
+-	def __init__(self, players):
+-		if int(players) < MINPLAYERS or int(players) > MAXPLAYERS:
+-			raise Exception("Illegal Number of Players, please type a number between {} and {}".format(MINPLAYERS, MAXPLAYERS))
+-		for i in range(int(players)):
+-			(self.players.append({'player' : player.Player(i),
+-								 'name' : i,
+-								 'bull_points':  0}))
+-
+-	def endOfRound(self):
+-		players = sorted(self.players, key=lambda player: player['bull_points'])
+-
+-		if players[-1]['bull_points'] >= LOSINGSCORE:
+-			print "Final Scores: \n "
+-			for player in players:
+-				print "Player {} had {} points \n".format(player['player'].getName(), player['bull_points'])
+-		else:
+-			self.runGame()
+-
+-
+-	def startRound(self):
+-		self.dealer = dealer.Dealer(self.players)
+-
+-		for player in self.players:
+-			player['player'].setHand(self.dealer.dealFirst())
+-
+-		self.dealer.setStacks()
+-
+-	def totalBull(self, stack):
+-		points = 0
+-		if stack:
+-			for card in stack.getCards():
+-				points += card.getBullNumber()
+-		return points
+-
+-	def turn(self):
+-		cards_played = []
+-		for player in self.players:
+-			cards_played.append((player['player'], player['player'].playCard(self.dealer.getStacks())))
+-
+-		cards_played = sorted(cards_played, key=lambda card: card[1])
+-
+-		for players_card in cards_played:
+-			current_player = players_card[0]
+-			stacks = self.dealer.updateStacks(players_card)
+-			choice = current_player.pickStack(stacks)
+-			if choice is not []:
+-				self.players[current_player.getName()]['bull_points'] += self.totalBull(choice)
+-				self.dealer.removeStack(choice, players_card)
+-
+-	def runGame(self):
+-
+-		self.startRound()
+-
+-		while len(self.players[0]['player'].getHand()) > 0: 
+-			self.turn()
+-
+-		self.endOfRound()
+-
+-def main(num_players):
+-	game = Main(num_players)
+-	game.runGame()
+-
+-if __name__ == "__main__":
+-	main(sys.argv[1])
+-
+diff --git a/3/test_card.py b/3/test_card.py
+deleted file mode 100644
+index b71bd43..0000000
+--- a/3/test_card.py
++++ /dev/null
+@@ -1,19 +0,0 @@
+-import unittest
+-import dealer
+-import components
+-
+-class TestCardMethods(unittest.TestCase):
+-  def setUp(self):
+-    self.card = card.Card()
+-
+-  def tearDown(self):
+-    del self.card
+-
+-  def test_get_number(self):
+-    self.assertEqual()
+-
+-  def test_set_number(self):
+-
+-  def test_get_bull_points(self):
+-
+-  def test_set_bull_points(self):
+diff --git a/3/test_components.py b/3/test_components.py
+deleted file mode 100644
+index 687c66f..0000000
+--- a/3/test_components.py
++++ /dev/null
+@@ -1,43 +0,0 @@
+-#tests for card and stack class methods
+-import unittest
+-import components
+-
+-class TestComponentsMethods(unittest.TestCase):
+-  def setUp(self):
+-    self.card1 = components.Card(1)
+-    self.card2 = components.Card(2)
+-    self.stack1 = components.Stack(self.card1)
+-
+-
+-  def tearDown(self):
+-    del self.card1
+-    del self.card2
+-    del self.stack1
+-
+-  def testGetNumber(self):
+-    answer = self.card1.getNumber()
+-    self.assertEqual(answer, 1)
+-
+-  def testGetBullNumber(self):
+-    bullNum = self.card1.getBullNumber()
+-    if((bullNum <= 7) or (bullNum >= 2)) and type(bullNum) is int:
+-      self.assertEqual(True, True)
+-    else :
+-      self.assertEqual(True, False)
+-
+-  def testSetBullNumber(self):
+-    self.card1.setBullNumber(3)
+-    self.assertEqual(self.card1.getBullNumber(), 3)
+-
+-  def testGetCards(self):
+-    self.assertEqual(self.stack1.getCards()[0].getNumber(), self.card1.getNumber())
+-
+-  def testSetCards(self):
+-    self.stack1.setCard(self.card2)
+-    self.assertEqual(self.stack1.getCards()[1].getNumber(), self.card2.getNumber())
+-
+-  def testGetLength(self):
+-    self.assertEqual(self.stack1.getLength(), 1)
+-
+-if __name__ == '__main__':
+-  unittest.main()
+\ No newline at end of file
+diff --git a/3/test_dealer.py b/3/test_dealer.py
+deleted file mode 100644
+index b549e30..0000000
+--- a/3/test_dealer.py
++++ /dev/null
+@@ -1,35 +0,0 @@
+-# Unit-testing suite for 6 Nimmt! methods in dealer component
+-import unittest
+-import dealer
+-import components
+-#import player
+-
+-class TestDealerMethods(unittest.TestCase):
+-	def setUp(self):
+-		self.dealerEmpty1 = dealer.Dealer([])
+-		self.dealerEmpty2 = dealer.Dealer([])
+-
+-	def tearDown(self):
+-		del self.dealerEmpty1
+-		del self.dealerEmpty2
+-
+-	def testGetPlayersEmpty(self):
+-		self.assertEqual(self.dealerEmpty1.getPlayers(), [])
+-
+-	def testGetDeck(self):
+-		self.assertEqual(self.dealerEmpty1.getDeck(), self.dealerEmpty2.getDeck())
+-
+-	def testSetStacks(self):
+-		self.dealerEmpty1.setStacks()
+-		self.assertEqual(len(self.dealerEmpty1.getStacks()), 4)
+-
+-	def testGetStacksEmpty(self):
+-		self.assertEqual(len(self.dealerEmpty1.getStacks()), 0)
+-
+-	def testDealFirst(self):
+-		self.dealerEmpty1.setStacks()
+-		self.assertEqual(len(self.dealerEmpty1.dealFirst()), 10)
+-
+-
+-if __name__ == '__main__':
+-		unittest.main()
+\ No newline at end of file
+diff --git a/3/test_main.py b/3/test_main.py
+deleted file mode 100644
+index 3a03832..0000000
+--- a/3/test_main.py
++++ /dev/null
+@@ -1,19 +0,0 @@
+-# Unit-testing for main component methods.
+-
+-import unittest
+-import dealer
+-import components
+-import player
+-import main
+-
+-class TestMainMethods(unittest.TestCase):
+-
+-  def setUp(self):
+-    self.game = main.main(4)
+-
+-  def tearDown(self):
+-    del self.game
+-
+-
+-if __name__ == '__main__':
+-    unittest.main()
+\ No newline at end of file
+-- 
+2.5.4 (Apple Git-61)
+
+
+From 98ce07b8807059c5f7465fed2d237e3990389ecc Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 23:02:22 -0500
+Subject: [PATCH 14/14] reorganized so the game can run from 2/take5
+
+---
+ 2/take5/player.py      |  1 +
+ 2/take5/test_player.py |  1 +
+ 3/player.py            | 47 -----------------------------------------------
+ 3/take5/player.py      | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3/take5/test_player.py | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3/test_player.py       | 47 -----------------------------------------------
+ 6 files changed, 96 insertions(+), 94 deletions(-)
+ create mode 120000 2/take5/player.py
+ create mode 120000 2/take5/test_player.py
+ delete mode 100644 3/player.py
+ create mode 100644 3/take5/player.py
+ create mode 100644 3/take5/test_player.py
+ delete mode 100644 3/test_player.py
+
+diff --git a/2/take5/player.py b/2/take5/player.py
+new file mode 120000
+index 0000000..5a6169f
+--- /dev/null
++++ b/2/take5/player.py
+@@ -0,0 +1 @@
++player.py
+\ No newline at end of file
+diff --git a/2/take5/test_player.py b/2/take5/test_player.py
+new file mode 120000
+index 0000000..81b4d6c
+--- /dev/null
++++ b/2/take5/test_player.py
+@@ -0,0 +1 @@
++test_player.py
+\ No newline at end of file
+diff --git a/3/player.py b/3/player.py
+deleted file mode 100644
+index 10e4ead..0000000
+--- a/3/player.py
++++ /dev/null
+@@ -1,47 +0,0 @@
+-# the Player component for a game of 6 Nimmt!
+-import components
+-
+-class Player:
+-	name = None
+-	hand = []
+-	current_deck = []
+-
+-	def __init__(self, name):
+-		self.name = name
+-
+-	def getName(self):
+-		return self.name
+-
+-	def getHand(self):
+-		return self.hand
+-
+-	def setHand(self, hand):
+-		self.hand = hand
+-
+-	def playCard(self, deck):
+-		self.current_deck = deck
+-		chosen_card = None
+-		highest_face = 0
+-		for card in self.hand:
+-			if card.getNumber() > highest_face:
+-				chosen_card = card
+-
+-		self.hand.remove(chosen_card)
+-		return chosen_card
+-
+-	def totalBull(self, stack):
+-		points = 0
+-		if stack:
+-			for card in stack.getCards():
+-				points += card.getBullNumber()
+-		return points
+-
+-	def pickStack(self, stacks):
+-		try: 
+-			selected_stack = stacks[0]
+-			for stack in stacks:
+-				if self.totalBull(stack) < self.totalBull(selected_stack):
+-					selected_stack = stack
+-		except:
+-			selected_stack = []
+-		return selected_stack
+diff --git a/3/take5/player.py b/3/take5/player.py
+new file mode 100644
+index 0000000..10e4ead
+--- /dev/null
++++ b/3/take5/player.py
+@@ -0,0 +1,47 @@
++# the Player component for a game of 6 Nimmt!
++import components
++
++class Player:
++	name = None
++	hand = []
++	current_deck = []
++
++	def __init__(self, name):
++		self.name = name
++
++	def getName(self):
++		return self.name
++
++	def getHand(self):
++		return self.hand
++
++	def setHand(self, hand):
++		self.hand = hand
++
++	def playCard(self, deck):
++		self.current_deck = deck
++		chosen_card = None
++		highest_face = 0
++		for card in self.hand:
++			if card.getNumber() > highest_face:
++				chosen_card = card
++
++		self.hand.remove(chosen_card)
++		return chosen_card
++
++	def totalBull(self, stack):
++		points = 0
++		if stack:
++			for card in stack.getCards():
++				points += card.getBullNumber()
++		return points
++
++	def pickStack(self, stacks):
++		try: 
++			selected_stack = stacks[0]
++			for stack in stacks:
++				if self.totalBull(stack) < self.totalBull(selected_stack):
++					selected_stack = stack
++		except:
++			selected_stack = []
++		return selected_stack
+diff --git a/3/take5/test_player.py b/3/take5/test_player.py
+new file mode 100644
+index 0000000..8e53678
+--- /dev/null
++++ b/3/take5/test_player.py
+@@ -0,0 +1,47 @@
++#unit tests for player component of 6 Nimmt!
++
++import unittest
++import components
++import player
++
++class TestPlayerMethods(unittest.TestCase):
++
++  def setUp(self):
++    self.card1 = components.Card(1)
++    self.card2 = components.Card(2)
++    self.stack1 = components.Stack(self.card1)
++    self.stack2 = components.Stack(self.card2)
++    self.player0 = player.Player(0)
++
++  def tearDown(self):
++    del self.card1
++    del self.card2
++    del self.stack1
++    del self.player0
++
++  def testGetName(self):
++    self.assertEqual(self.player0.getName(), 0)
++
++  def testGetHand(self):
++    self.assertEqual(self.player0.getHand(), [])
++
++  def testSetHand(self):
++    self.player0.setHand([self.card1])
++    self.assertEqual(len(self.player0.getHand()), 1)
++
++  def testPlayCard(self):
++    self.player0.setHand([self.card1])
++    self.assertEqual(self.player0.playCard(self.stack2), self.card1)
++
++  def testTotalBull(self):
++    self.assertEqual(self.player0.totalBull(self.stack1), self.card1.getBullNumber())
++
++  def testPickStack(self):
++    self.assertEqual(self.player0.pickStack([self.stack1]), self.stack1)
++
++  def testPickNoStack(self):
++    self.assertEqual(self.player0.pickStack([]), [])
++
++if __name__ == '__main__':
++    unittest.main()
++
+diff --git a/3/test_player.py b/3/test_player.py
+deleted file mode 100644
+index 8e53678..0000000
+--- a/3/test_player.py
++++ /dev/null
+@@ -1,47 +0,0 @@
+-#unit tests for player component of 6 Nimmt!
+-
+-import unittest
+-import components
+-import player
+-
+-class TestPlayerMethods(unittest.TestCase):
+-
+-  def setUp(self):
+-    self.card1 = components.Card(1)
+-    self.card2 = components.Card(2)
+-    self.stack1 = components.Stack(self.card1)
+-    self.stack2 = components.Stack(self.card2)
+-    self.player0 = player.Player(0)
+-
+-  def tearDown(self):
+-    del self.card1
+-    del self.card2
+-    del self.stack1
+-    del self.player0
+-
+-  def testGetName(self):
+-    self.assertEqual(self.player0.getName(), 0)
+-
+-  def testGetHand(self):
+-    self.assertEqual(self.player0.getHand(), [])
+-
+-  def testSetHand(self):
+-    self.player0.setHand([self.card1])
+-    self.assertEqual(len(self.player0.getHand()), 1)
+-
+-  def testPlayCard(self):
+-    self.player0.setHand([self.card1])
+-    self.assertEqual(self.player0.playCard(self.stack2), self.card1)
+-
+-  def testTotalBull(self):
+-    self.assertEqual(self.player0.totalBull(self.stack1), self.card1.getBullNumber())
+-
+-  def testPickStack(self):
+-    self.assertEqual(self.player0.pickStack([self.stack1]), self.stack1)
+-
+-  def testPickNoStack(self):
+-    self.assertEqual(self.player0.pickStack([]), [])
+-
+-if __name__ == '__main__':
+-    unittest.main()
+-
+-- 
+2.5.4 (Apple Git-61)
+

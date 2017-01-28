@@ -1,0 +1,67 @@
+From afb8b0cb24de7e8b37a690f824f3d3f71f0de61c Mon Sep 17 00:00:00 2001
+From: kdehart <kdehart@ccs.neu.edu>
+Date: Sun, 31 Jan 2016 21:46:43 -0500
+Subject: [PATCH] fix setCard method in Stacks, initialize correctly
+
+---
+ 2/take5/components.py      | 11 +++++++++--
+ 2/take5/dealer.py          |  2 +-
+ 2/take5/test_components.py |  3 +++
+ 3 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/2/take5/components.py b/2/take5/components.py
+index ea42cdf..407248b 100644
+--- a/2/take5/components.py
++++ b/2/take5/components.py
+@@ -27,10 +27,17 @@ class Stack:
+ 	cards = []
+ 
+ 	def __init__(self, card):
+-		self.cards.append(card)
++		self.cards = [card]
+ 
+ 	def getCards(self):
+ 		return self.cards
+ 
+ 	def setCard(self, card):
+-		self.cards.append(card)
+\ No newline at end of file
++		self.cards.append(card)
++
++	def getLength(self):
++		length = 0
++		for card in self.cards:
++			length += 1
++			
++		return length 
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index 427ceb2..289ad1a 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -33,7 +33,7 @@ class Dealer:
+ 	def setStacks(self):
+ 		stacks = []
+ 		for i in range(1,5):
+-			stacks.append(components.Stack(self.deck.pop(1)))
++			stacks.append(components.Stack(self.deck.pop()))
+ 		self.stacks = stacks
+ 
+ 	def shuffleCards(self):
+diff --git a/2/take5/test_components.py b/2/take5/test_components.py
+index 4b97284..36a04dd 100644
+--- a/2/take5/test_components.py
++++ b/2/take5/test_components.py
+@@ -36,6 +36,9 @@ class TestComponentsMethods(unittest.TestCase):
+     self.stack1.setCard(self.card2)
+     self.assertEqual(self.stack1.getCards()[1].getNumber(), self.card2.getNumber())
+ 
++  def testGetLength(self):
++    self.assertEqual(self.stack1.getLength(), 1)
++
+ 
+ if __name__ == '__main__':
+   unittest.main()
+\ No newline at end of file
+-- 
+2.5.4 (Apple Git-61)
+

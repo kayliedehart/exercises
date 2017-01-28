@@ -1,0 +1,49 @@
+# Interface for Player component interacting with the main 6 Nimmt! game components
+
+"""
+From a high level, there are three components: the Player, the Dealer, and the 
+main program, which executes the game protocol. Cards and Stacks are subcomponents 
+that are used by the Player and the Dealer; Cards are used and exchanged between the 
+Player and Dealer as defined by the main program, and are also a subcomponent of Stacks. 
+"""
+
+class Card:
+	self.number =  # integer in range [1,104]. UNIQUE.
+	self.bull =  # integer in range [2,7]
+
+
+class Stack(cards=None):
+	self.cards = cards # list of Cards, order matters. len(self.cards) <= 5
+
+
+class Player(cards=None, current_stacks=None, card_position=None):
+	self.hand = cards # list of Cards Player has been dealt.
+	self.bull = 0
+	self.current_stacks = current_stacks # a list of up to 4 Stacks
+	self.selected = card_position # always None or a list index within self.hand
+
+
+class Dealer(players_list=None, players_card=None):	
+	self.players = [] # list of Players, order matters.
+	self.deck = [] # Contains all remaining Cards not in a Stack or held by a Player. At start of game, contains all possible Cards.
+	self.stacks = [] # always contains 4 Stacks
+
+
+# for now, "players" is an integer
+def main(players):
+	"""
+	Protocol: 
+	1. Create a Dealer, pass in a list of newly generated Players (quantity specified in command line).
+	2. Dealer passes 10 cards from Dealer.deck to each Player.
+	3. Dealer generates 4 1-Card Stacks (taken from Dealer.deck) and passes a list of those 4 Cards to each Player
+	4. Each Player passes 1 card to the Dealer
+	5.1. Dealer gives Player with smallest Card.number the updated Stacks according to the Player's Card;
+		-If the Player's Card can be placed without penalty, return an empty list
+		-If the Player's Card results in an overflow (more than 5 cards in a Stack), pass that Stack to Player and update Stack with Player's Card
+		-If the Player's Card is smaller than all top Cards, return a list of all Stacks to the Player
+			5.2. Player indicates to Dealer which Stack they're keeping
+		Dealer moves on and repeats step 5.1 with Player with next smallest Card.number until all Cards have been placed
+	6. Repeat steps 4 and 5 until Players are out of Cards
+	7. Players pass their self.bull to main
+	8. main announces winner of game or creates new Dealer with current list of Players and repeats steps 2-7.
+	"""

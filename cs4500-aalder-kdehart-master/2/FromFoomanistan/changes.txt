@@ -1,0 +1,13 @@
+Methods changed:
+-- discard: stacks is no longer an argument to the method. The method
+updates the player's "selected" field
+
+-- choose-stack : stacks is no longer an argument and method returns the index
+of the chosen stack rather than returning the chosen stack
+
+-- update_bull_points: removed, no longer needed
+-- Dealer no longer requires a deck argument
+-- Added create_deck method to create an initial deck of cards
+-- changed add_cards to create_stacks because we create 4 new stacks, each
+having 1 card  and updated purpose statement
+-- generate_deck in main no longer needed
